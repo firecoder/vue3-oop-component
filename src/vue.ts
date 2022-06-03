@@ -43,13 +43,13 @@ export interface CustomClassImplementation {
 }
 
 export type Vue<
-    Props = unknown,
+    Props = any,
     Emits extends EmitsOptions = ObjectEmitsOptions,
-    DefaultProps = Record<string, unknown>
+    DefaultProps = Record<string, any>
 > = ComponentPublicInstance<
     Props,
-    Record<string, unknown>,
-    Record<string, unknown>,
+    Record<string, any>,
+    Record<string, any>,
     Record<string, any>,
     MethodOptions,
     Emits,
@@ -59,7 +59,7 @@ export type Vue<
 > & ClassComponentHooks & CustomClassImplementation;
 
 // change to never
-export type VueBase = Vue<unknown, string[]>;
+export type VueBase = Vue<any, string[]>;
 
 // unlike vue's vue-class-component, no internal of VueStatic is exposed by default. VueStatic is regarded as
 // internal and unstable API. Maybe this API change with next major version like with Vue2 to Vue3.
