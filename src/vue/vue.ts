@@ -7,7 +7,7 @@
 
 import type {
     ComponentPublicInstance,
-    ComputedOptions,
+    ComponentInternalInstance,
     MethodOptions,
     VNode,
     VNodeProps,
@@ -16,6 +16,11 @@ import type {
     ComponentOptionsBase,
     EmitsOptions,
     ObjectEmitsOptions, WatchOptions, WatchStopHandle,
+} from "vue";
+
+import {
+    nextTick,
+    watch,
 } from "vue";
 
 export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
@@ -73,31 +78,73 @@ export type VueClass<V> = VueConstructor & {
     new (...args: unknown[]): V & Vue;
 };
 
-class VueComponentBaseImpl {
-    // define some Vue provided properties. These will be overwritten by factory function that is created by
-    // the "Component" decorator.
-    public $props: Record<string, unknown> = {};
-    public $emit: ((event: string, ...args: unknown[]) => void) = (() => { /* ignore */ });
-    public $attrs: ComponentPublicInstance["$attrs"] = {};
-    public $slots: ComponentPublicInstance["$slots"] = {};
+class VueComponentBaseImpl implements VueBase {
+    /**
+     * This will be set at runtime after the instance has been created, so it is not available with the constructor!
+     */
+    public readonly $!: ComponentInternalInstance;
 
-    /*
-    constructor(props: Record<string, any>, ctx: SetupContext) {
-        defineGetter(this, '$props', () => props)
-        defineGetter(this, '$attrs', () => ctx.attrs)
-        defineGetter(this, '$slots', () => ctx.slots)
-        defineGetter(this, '$emit', () => ctx.emit)
-
-        Object.keys(props).forEach((key) => {
-            Object.defineProperty(this, key, {
-                enumerable: false,
-                configurable: true,
-                writable: true,
-                value: (props as any)[key],
-            })
-        })
+    // taken from here
+    // https://github.com/vuejs/core/blob/bdffc143ef3aa27c347b22f19d0052194b54836e/packages/runtime-core/src/componentPublicInstance.ts#L226
+    public get $el() {
+        return this.$?.vnode?.el;
     }
-    */
+
+    public get $attrs() {
+        return this.$?.attrs;
+    }
+
+    public get $data() {
+        return this.$?.data;
+    }
+
+    public get $emit() {
+        return this.$?.emit;
+    }
+
+    public get $forceUpdate() {
+        return this.$?.f || (() => this.$nextTick(() => this.$?.update()));
+    }
+
+    public get $nextTick(): (<T extends ThisType<VueBase>>(fn: ((this: T) => void) | undefined) => Promise<void>) {
+        return this.$.n || nextTick.bind(this.$.proxy);
+    }
+
+    public get $parent(): ComponentPublicInstance | null {
+        return this.$?.parent as unknown as ComponentPublicInstance;
+    }
+
+    public get $props() {
+        return this.$?.props;
+    }
+
+    public get $options(): ComponentOptionsBase<any, any, any, any, any, any, any, any, any> {
+        return this.$?.type as ComponentOptionsBase<any, any, any, any, any, any, any, any, any> || {};
+    }
+
+    public get $refs() {
+        return this.$.refs;
+    }
+
+    public get $root(): ComponentPublicInstance | null {
+        return this.$?.root as unknown as ComponentPublicInstance;
+    }
+
+    public get $slots() {
+        return this.$?.slots;
+    }
+
+    public $watch(
+        source: string | ((...args: unknown[]) => void),
+        cb: ((...args: unknown[]) => void),
+        options: WatchOptions | undefined,
+    ): WatchStopHandle {
+        if (typeof source === "string") {
+            return watch(() => (this as { [index: string]: any })[source] as unknown, cb, options);
+        } else {
+            return watch(source, cb, options);
+        }
+    }
 }
 
 export const Vue: VueConstructor = VueComponentBaseImpl as VueConstructor;
