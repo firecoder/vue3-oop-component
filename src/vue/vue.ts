@@ -19,6 +19,7 @@ import type {
 } from "vue";
 
 import {
+    getCurrentInstance,
     nextTick,
     watch,
 } from "vue";
@@ -78,7 +79,34 @@ export type VueClass<V> = VueConstructor & {
     new (...args: unknown[]): V & Vue;
 };
 
+type IndexableReturnsAny<T> = T & { [key: string]: any };
+
 class VueComponentBaseImpl implements VueBase {
+
+    /**
+     * Reads and sets the internal Vue instance and all properties!
+     */
+    public constructor() {
+        const vueInstance = getCurrentInstance();
+        if (!vueInstance) {
+            throw new Error(
+                "Failed to access internal Vue companion instance. Maybe Vue API has changed or the instance " +
+                "is not created by Vue!",
+            );
+        }
+
+        this.$ = vueInstance;
+
+        // set the properties as passed by Vue
+        Object.keys(this.$props || {}).forEach((key) => {
+            Object.defineProperty(this, key, {
+                get() { return (this.$props || {})[key]; },
+                enumerable: true,
+                writable: false,
+            });
+        });
+    }
+
     /**
      * This will be set at runtime after the instance has been created, so it is not available with the constructor!
      */
@@ -140,7 +168,7 @@ class VueComponentBaseImpl implements VueBase {
         options: WatchOptions | undefined,
     ): WatchStopHandle {
         if (typeof source === "string") {
-            return watch(() => (this as { [index: string]: any })[source] as unknown, cb, options);
+            return watch(() => (this as IndexableReturnsAny<VueComponentBaseImpl>)[source] as unknown, cb, options);
         } else {
             return watch(source, cb, options);
         }
