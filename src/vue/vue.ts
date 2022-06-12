@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * This file is inspired by package "vue-class-component". Its content is partly taken from there and adapted to the needs
  * of this package.
@@ -96,7 +97,10 @@ class VueComponentBaseImpl implements VueBase {
         }
 
         this.$ = vueInstance;
+        this._applyProperties();
+    }
 
+    private _applyProperties(): VueComponentBaseImpl {
         // set the properties as passed by Vue
         Object.keys(this.$props || {}).forEach((key) => {
             Object.defineProperty(this, key, {
@@ -105,6 +109,8 @@ class VueComponentBaseImpl implements VueBase {
                 writable: false,
             });
         });
+
+        return this;
     }
 
     /**
