@@ -6,7 +6,7 @@
  */
 
 import type { ComponentOptions } from "vue";
-import type { Vue, VueClass } from "./vue";
+import type { CompatibleComponentOptions, Vue, VueClass } from "./vue";
 
 export type ClassDecorator = (ConstructorFunction: typeof Vue) => void;
 export type PropertyDecorator = (target: Vue, key: string) => void;
@@ -34,11 +34,11 @@ export type VueDecoratorFactoryFunction =
 export type DecoratedClass = VueClass<Vue> & {
     // Property, method and parameter decorators created by `createDecorator` helper
     // will enqueue functions.
-    __decorators__?: ((options: ComponentOptions<Vue>) => void)[]
+    __decorators__?: ((options: CompatibleComponentOptions<Vue>) => void)[]
 }
 
 export function createDecorator(
-    factory: (options: ComponentOptions<Vue>, key: string, index?: number) => void,
+    factory: (options: CompatibleComponentOptions<Vue>, key: string, index?: number) => void,
 ): VueDecorator {
     return (target: Vue | typeof Vue, key: string, index?: number) => {
 
