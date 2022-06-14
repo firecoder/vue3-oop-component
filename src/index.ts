@@ -9,4 +9,4 @@ export * from "./vue";
 export * from "./mixins";
 export * from "./utility-types";
 // export * from "./types";
-export * from "./decorator";
+export * from "./decorator/decorator";
