@@ -6,7 +6,7 @@
  */
 
 import type { ComponentOptions } from "vue";
-import type { CompatibleComponentOptions, Vue, VueClass } from "./vue";
+import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
 
 export type ClassDecorator = (ConstructorFunction: typeof Vue) => void;
 export type PropertyDecorator = (target: Vue, key: string) => void;
