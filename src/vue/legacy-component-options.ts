@@ -37,6 +37,7 @@ type MethodsWithoutThis<T> = {
     [key in keyof T]: (...args: any[]) => any
 };
 
+// see: https://v2.vuejs.org/v2/api/#provide-inject
 export type ObjectInjectOptions = Record<string | symbol, string | symbol | {
     from?: string | symbol;
     default?: unknown;
