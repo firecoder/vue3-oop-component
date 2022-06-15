@@ -54,3 +54,22 @@ export function applyInjectsOnInstance(
         }
     }
 }
+
+
+export function registerProvidedValues(
+    instance: Vue,
+    providedValuesSpec: CompatibleComponentOptions<Vue>["provide"],
+): void {
+    const providedValues = (typeof providedValuesSpec === "function") ?
+        providedValuesSpec.apply(instance) : providedValuesSpec;
+
+    if (typeof providedValues === "object") {
+        [
+            ...Object.getOwnPropertyNames(providedValues),
+            ...Object.getOwnPropertySymbols(providedValues),
+        ]
+            .filter(isNotInternalHookName)
+            .forEach((propName) => CompositionApi.provide(propName, providedValues[propName]))
+        ;
+    }
+}
