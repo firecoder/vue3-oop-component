@@ -3,13 +3,14 @@ import type { UserConfigExport } from "vite";
 import * as path from "path";
 import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vite";
+import vuePlugin from "@vitejs/plugin-vue";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require("./package.json") as { name: string, main: string, dependencies: Record<string, string> };
 
 // https://vitejs.dev/config/
 export const BaseConfig: UserConfigExport = {
-    plugins: [],
+    plugins: [vuePlugin()],
     resolve: {
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
