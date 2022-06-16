@@ -12,8 +12,8 @@ export const BaseConfig: UserConfigExport = {
     plugins: [],
     resolve: {
         alias: {
-            "@": fileURLToPath(new URL("./src", import.meta.url))
-        }
+            "@": fileURLToPath(new URL("./src", import.meta.url)),
+        },
     },
     build: {
         lib: {
@@ -23,13 +23,13 @@ export const BaseConfig: UserConfigExport = {
                 .replace(/-./g, ((w) => w[1].toUpperCase()))
                 .replace(/^./, ((w) => w[0].toUpperCase()))
             ,
-            fileName: (format) => path.basename(pkg.main),
+            fileName: () => path.basename(pkg.main),
             formats: ["es"],
         },
-        rollupoptions: {
+        rollupOptions: {
             external: [...Object.getOwnPropertyNames(pkg.dependencies), "tslib"],
-        }
+        },
     },
 };
 
-export default defineConfig(BaseConfig)
+export default defineConfig(BaseConfig);
