@@ -30,9 +30,30 @@ export type TLifeCycleHookRegisterFunction =
  *     mocked API function will be used instead af od the original function. This way, the tests are really able to
  *     check, whether the Composition API functions are called properly.
  * </p>
+ *
+ * <p>
+ *     The life cycle hooks of {@code beforeCreate} and {@code created} are not handled by the composition API.
+ *     Thus, the provided functions are just stubs here. The hook functions are handled internally by this component
+ *     decorator.
+ * </p>
  */
 export const $lifeCycleHookRegisterFunctions: {
     [hookName: string]: TLifeCycleHookRegisterFunction;
+    beforeCreate: (() => undefined),
+    created: (() => undefined),
+    beforeMount: typeof CompositionApi.onBeforeMount,
+    mounted: typeof CompositionApi.onMounted,
+    beforeDestroy: typeof CompositionApi.onBeforeUnmount,
+    beforeUnMount: typeof CompositionApi.onBeforeUnmount,
+    destroyed: typeof CompositionApi.onUnmounted,
+    unmounted: typeof CompositionApi.onUnmounted,
+    beforeUpdate: typeof CompositionApi.onBeforeUpdate,
+    updated: typeof CompositionApi.onUpdated,
+    activated: typeof CompositionApi.onActivated,
+    deactivated: typeof CompositionApi.onDeactivated,
+    render: typeof CompositionApi.onRenderTriggered,
+    errorCaptured: typeof CompositionApi.onErrorCaptured,
+    serverPrefetch: typeof CompositionApi.onServerPrefetch,
 } = {
     beforeCreate: () => undefined,
     created: () => undefined,

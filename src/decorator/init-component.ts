@@ -3,7 +3,10 @@ import type { CompatibleComponentOptions, Vue } from "../vue";
 
 import { reactive } from "vue";
 import { CompositionApi } from "../vue";
-import { $internalHookNames } from "./life-cycle-hooks";
+import {
+    $internalHookNames,
+    $lifeCycleHookRegisterFunctions,
+} from "./life-cycle-hooks";
 
 export function isNotInternalHookName(name: string | symbol): boolean {
     return name && (
@@ -150,6 +153,44 @@ export function registerComputedValues(
                     CompositionApi.warn(`Invalid "computed" specification for property ${key}: ${jsonDebug}`);
                 }
             })
+        ;
+    }
+}
+
+/**
+ * Registers the life-cycle hooks.
+ *
+ * <p>
+ *     In Vue 2 and Vue 3, `this` context for the hook functions are set to the Vue internal component. Vue 2 reused
+ *     the "external" class component internally. Hence, it contained all defined methods and properties as defined
+ *     for the component. In Vue 3, the internal component is disassociated from the external class component.
+ *     Because this library defines a base class to mimic the Vue 2 internal component and all class component
+ *     inherit from this base class, the `this` context is bound to the created class component instance.
+ * </p>
+ *
+ * <p>
+ *     There is one exception to this rule: the hook `beforeCreate` does not have any class component instance
+ *     available. Hence, its `this` context is set to the Vue 3 internal instance.
+ * </p>
+ *
+ * <p>
+ *     The hooks {@code beforeCreate} and {@code created} are ignored because these are not supported by the
+ *     Composition API and thus handled internally by the component decorator function.
+ * </p>
+ * @param instance
+ * @param hookFunctions
+ */
+export function registerLifeCycleHooks(
+    instance: Vue,
+    hookFunctions: Vue | CompatibleComponentOptions<Vue>,
+): void {
+    if (instance && hookFunctions) {
+        Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions)
+            .filter((hookName) => typeof hookFunctions[hookName] === "function")
+            .forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](
+                hookFunctions[hookName].bind(instance),
+                instance.$,
+            ))
         ;
     }
 }
