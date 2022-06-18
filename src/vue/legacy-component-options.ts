@@ -3,6 +3,7 @@
 // see: https://github.com/vuejs/vue/blob/d6bdff890322bc87792094a1690bcd16373cf82d/types/options.d.ts
 
 import type {
+    ComponentInternalInstance,
     ComponentPublicInstance,
     ComponentProvideOptions,
     ComponentOptionsBase,
@@ -70,20 +71,20 @@ export interface CompatibleComponentOptions<
     provide?: ComponentProvideOptions;
     inject?: ComponentInjectOptions;
     // mixins?: Mixin[];
-    beforeCreate?(): void;
-    created?(): void;
-    beforeMount?(): void;
-    mounted?(): void;
-    beforeUpdate?(): void;
-    updated?(): void;
-    activated?(): void;
-    deactivated?(): void;
+    beforeCreate?(this: ComponentInternalInstance): void;
+    created?(this: VueClass<V>): void;
+    beforeMount?(this: VueClass<V>): void;
+    mounted?(this: VueClass<V>): void;
+    beforeUpdate?(this: VueClass<V>): void;
+    updated?(this: VueClass<V>): void;
+    activated?(this: VueClass<V>): void;
+    deactivated?(this: VueClass<V>): void;
     /** @deprecated use `beforeUnmount` instead */
-    beforeDestroy?(): void;
-    beforeUnmount?(): void;
+    beforeDestroy?(this: VueClass<V>): void;
+    beforeUnmount?(this: VueClass<V>): void;
     /** @deprecated use `unmounted` instead */
-    destroyed?(): void;
-    unmounted?(): void;
+    destroyed?(this: VueClass<V>): void;
+    unmounted?(this: VueClass<V>): void;
     renderTracked?: DebuggerHook;
     renderTriggered?: DebuggerHook;
     errorCaptured?: ErrorCapturedHook;
