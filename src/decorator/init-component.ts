@@ -4,16 +4,9 @@ import type { CompatibleComponentOptions, Vue } from "../vue";
 import { reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import {
-    $internalHookNames,
+    isNotInternalHookName,
     $lifeCycleHookRegisterFunctions,
 } from "./life-cycle-hooks";
-
-export function isNotInternalHookName(name: string | symbol): boolean {
-    return name && (
-        typeof name === "symbol" ||
-        (typeof name === "string" && ($internalHookNames.indexOf(name) < 0))
-    ) && true || false;
-}
 
 export function applyInjectsOnInstance(
     instance: Vue,

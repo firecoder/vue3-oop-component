@@ -120,3 +120,10 @@ export const $internalHookNames = [
     ...$lifeCycleHookNames,
     "data",
 ];
+
+export function isNotInternalHookName(name: string | symbol): boolean {
+    return name && (
+        typeof name === "symbol" ||
+        (typeof name === "string" && ($internalHookNames.indexOf(name) < 0))
+    ) && true || false;
+}
