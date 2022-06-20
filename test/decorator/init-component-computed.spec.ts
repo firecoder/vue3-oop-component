@@ -5,7 +5,7 @@ import {computed, reactive, triggerRef} from "vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as sinon from "sinon";
 
-import { registerComputedValues } from "../../src/decorator/init-component";
+import { ComponentBuilderImpl } from "../../src/decorator/ComponentBuilderImpl";
 import { CompositionApi } from "../../src/vue/composition-api";
 
 
@@ -27,7 +27,8 @@ describe("registerComputedValues(): Register computed properties", () => {
         ;
 
         const instance = {} as Vue;
-        registerComputedValues(instance, computedProperties);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.createComputedValues(computedProperties);
 
         mockedComputed.verify();
         expect(instance["meaning"]).toBeTypeOf("number");
@@ -47,7 +48,8 @@ describe("registerComputedValues(): Register computed properties", () => {
         ;
 
         const instance = {} as Vue;
-        registerComputedValues(instance, computedProperties);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.createComputedValues(computedProperties);
 
         mockedComputed.verify();
         expect(instance["failOnSetter"]).toBeTypeOf("string");
@@ -68,7 +70,8 @@ describe("registerComputedValues(): Register computed properties", () => {
             },
         };
 
-        registerComputedValues(instance, computedProperties);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.createComputedValues(computedProperties);
         expect(instance.test).toBeTypeOf("string");
         expect(instance.test).toEqual("starting");
 
@@ -95,7 +98,8 @@ describe("registerComputedValues(): Register computed properties", () => {
             },
         };
 
-        registerComputedValues(instance, computedProperties);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.createComputedValues(computedProperties);
         expect(instance.cachedValue).toBeTypeOf("string");
         expect(instance.cachedValue).toEqual("starting");
 
@@ -123,7 +127,8 @@ describe("registerComputedValues(): Register computed properties", () => {
             valueFromFixedInstance: () => helloPrefix + instance.rawValue,
         };
 
-        registerComputedValues(instance, computedProperties);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.createComputedValues(computedProperties);
         expect(instance.valueWithHello).toEqual(helloPrefix + "starting");
         expect(instance.valueWithHelloFromCached).toEqual(helloPrefix + "starting");
         expect(instance.valueFromFixedInstance).toEqual(helloPrefix + "starting");

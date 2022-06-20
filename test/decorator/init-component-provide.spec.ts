@@ -1,9 +1,9 @@
-import type { Vue } from "../../src/vue";
+import type { CompatibleComponentOptions, Vue } from "../../src/vue";
 import { afterEach, describe, expect, it } from "vitest";
 import * as sinon from "sinon";
 
-import { registerProvidedValues } from "../../src/decorator/init-component";
 import { CompositionApi } from "../../src/vue/composition-api";
+import { ComponentBuilderImpl } from "../../src/decorator/ComponentBuilderImpl";
 
 
 afterEach(() => {
@@ -24,7 +24,9 @@ describe("registerProvidedValues(): Provide data to child components", () => {
             .returns(undefined)
         ;
 
-        registerProvidedValues({} as Vue, providing);
+        const builder = new ComponentBuilderImpl({} as Vue);
+        builder.provideData(providing);
+
         mockedProvide.verify();
     });
 
@@ -43,7 +45,7 @@ describe("registerProvidedValues(): Provide data to child components", () => {
             ...Object.getOwnPropertySymbols(providing),
         ];
 
-        function performTest(registerProvidedValuesFunc: typeof registerProvidedValues) {
+        function performTest(registerProvidedValuesFunc: (builder: ComponentBuilderImpl<Vue>, spec: CompatibleComponentOptions<Vue>["provide"]) => void) {
             // stub the function. Mocks just support a single call to the stubbed function. Hence, "stub" must be used.
             const stubbedProvide = sinon.stub(CompositionApi, "provide");
             expect(indexes.length).toEqual(5);
@@ -52,7 +54,8 @@ describe("registerProvidedValues(): Provide data to child components", () => {
                 stubbedProvide.withArgs(propName, providing[propName]),
             );
 
-            registerProvidedValuesFunc({} as Vue, providing);
+            const builder = new ComponentBuilderImpl({} as Vue);
+            registerProvidedValuesFunc(builder, providing);
 
             stubbedProvide.restore();
             const allCalls = stubbedProvide.getCalls();
@@ -66,17 +69,17 @@ describe("registerProvidedValues(): Provide data to child components", () => {
         }
 
         it("Provide them as object", () => {
-            performTest((instance, providedValuesSpec) =>
-                registerProvidedValues(instance, providedValuesSpec),
+            performTest((builder, providedValuesSpec) =>
+                builder.provideData(providedValuesSpec),
             );
         });
 
         it("Provide them as factory function", () => {
             const provideAsFactoryFunc = sinon.stub();
 
-            performTest((instance, providedValuesSpec) => {
+            performTest((builder, providedValuesSpec) => {
                 provideAsFactoryFunc.returns(providedValuesSpec);
-                registerProvidedValues(instance, provideAsFactoryFunc);
+                builder.provideData(provideAsFactoryFunc);
             });
 
             expect(provideAsFactoryFunc.callCount).toEqual(1);
@@ -97,7 +100,8 @@ describe("registerProvidedValues(): Provide data to child components", () => {
         ;
 
         const instance = {} as Vue;
-        registerProvidedValues(instance, provideAsFactoryFunc);
-        expect(provideAsFactoryFunc.firstCall.thisValue).toBe(instance);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.provideData(provideAsFactoryFunc);
+        expect(provideAsFactoryFunc.firstCall.thisValue).toBe(builder.reactiveWrapper);
     });
 });

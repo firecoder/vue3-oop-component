@@ -3,7 +3,7 @@ import type { ObjectInjectOptions, Vue } from "../../src/vue";
 import { afterEach, describe, expect, it } from "vitest";
 import * as sinon from "sinon";
 
-import { applyInjectsOnInstance } from "../../src/decorator/init-component";
+import { ComponentBuilderImpl } from "../../src/decorator/ComponentBuilderImpl";
 import { CompositionApi } from "../../src/vue/composition-api";
 
 
@@ -25,7 +25,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propsToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propsToInject);
 
         mockedInject.verify();
         expect(instance[propsToInject[0]]).toEqual(propValuesInjected[0]);
@@ -43,7 +44,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         );
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propsToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propsToInject);
         stubbedInject.restore();
 
         // check the calls
@@ -80,7 +82,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
 
         mockedInject.verify();
         expect(instance["testProp"]).toEqual(propToInject.testProp.default);
@@ -104,7 +107,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
 
         mockedInject.verify();
         expect(instance["testProp"]).toEqual(provideValue);
@@ -125,7 +129,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
         mockedInject.verify();
 
         expect(instance["prop"]).toEqual(provideValue);
@@ -148,7 +153,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
 
         mockedInject.verify();
         expect(instance["testProp"]).toEqual(provideValue);
@@ -169,7 +175,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
 
         mockedInject.verify();
         expect(instance[property]).toEqual(provideValue);
@@ -190,7 +197,8 @@ describe("applyInjectsOnInstance(): Inject data into instance by Name", () => {
         ;
 
         const instance = {} as Vue;
-        applyInjectsOnInstance(instance, propToInject);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.injectData(propToInject);
 
         mockedInject.verify();
         expect(instance[property]).toEqual(provideValue);

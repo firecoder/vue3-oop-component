@@ -2,10 +2,10 @@ import type { Vue } from "../../src/vue";
 
 import { afterEach, describe, expect, it } from "vitest";
 import * as sinon from "sinon";
-import { reactive } from "vue";
+import { reactive, toRaw } from "vue";
 
 import { $lifeCycleHookRegisterFunctions } from "../../src/decorator/life-cycle-hooks";
-import { registerLifeCycleHooks } from "../../src/decorator/init-component";
+import { ComponentBuilderImpl } from "../../src/decorator/ComponentBuilderImpl";
 
 
 afterEach(() => {
@@ -22,7 +22,8 @@ describe("registerLifeCycleHooks():", () => {
         $lifeCycleHookRegisterFunctions.activated = registerOnActivated;
 
         const instance = {$: {}} as Vue;
-        registerLifeCycleHooks(instance, hooks);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.registerAdditionalLifeCycleHooks(hooks);
         expect(registerOnActivated.callCount).toEqual(1);
         expect(registerOnActivated.firstCall.firstArg).toBeTypeOf("function");
         expect(registerOnActivated.firstCall.args[1]).toBe(instance.$);
@@ -37,16 +38,18 @@ describe("registerLifeCycleHooks():", () => {
         $lifeCycleHookRegisterFunctions.activated = registerOnActivated;
 
         const instance = reactive({$: {}}) as Vue;
-        registerLifeCycleHooks(instance, hooks);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.registerAdditionalLifeCycleHooks(hooks);
+
         expect(registerOnActivated.callCount).toEqual(1);
         expect(registerOnActivated.firstCall.firstArg).toBeTypeOf("function");
-        expect(registerOnActivated.firstCall.args[1]).toBe(instance.$);
+        expect(registerOnActivated.firstCall.args[1]).toBe(toRaw(instance).$);
 
         registerOnActivated.firstCall.firstArg();
         expect(hooks.activated.firstCall.thisValue).toBe(instance);
     });
 
-    it("Life cycle hook is called with 'this' context set to class instance", () => {
+    it("Life cycle hook is called with 'this' context set to reactive version of instance", () => {
         const hooks = {
             activated: sinon.spy(),
         };
@@ -55,9 +58,10 @@ describe("registerLifeCycleHooks():", () => {
         $lifeCycleHookRegisterFunctions.activated = spyFunc;
 
         const instance = {$: {}} as Vue;
-        registerLifeCycleHooks(instance, hooks);
+        const builder = new ComponentBuilderImpl(instance);
+        builder.registerAdditionalLifeCycleHooks(hooks);
 
         spyFunc.firstCall.firstArg();
-        expect(hooks.activated.firstCall.thisValue).toBe(instance);
+        expect(hooks.activated.firstCall.thisValue).toBe(builder.reactiveWrapper);
     });
 });
