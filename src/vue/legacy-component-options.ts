@@ -45,6 +45,9 @@ export type ObjectInjectOptions = Record<string | symbol, string | symbol | {
 }>;
 export type ComponentInjectOptions = string[] | ObjectInjectOptions;
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ObjectProvideOptions = Exclude<ComponentProvideOptions, Function>
+
 export interface CompatibleComponentOptions<
     V extends Vue,
     Data = DefaultData<V>,
