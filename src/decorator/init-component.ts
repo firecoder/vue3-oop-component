@@ -1,7 +1,7 @@
 import type { Ref } from "vue";
 import type { CompatibleComponentOptions, Vue } from "../vue";
 
-import { reactive } from "vue";
+import { reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import {
     $internalHookNames,
@@ -22,11 +22,12 @@ export function applyInjectsOnInstance(
     if (!instance) {
         return instance;
     }
+    const rawInstance = toRaw(instance);
 
     if (Array.isArray(injectDefinitions)) {
         injectDefinitions
             .filter(isNotInternalHookName)
-            .forEach((propName) => instance[propName] = CompositionApi.inject(propName));
+            .forEach((propName) => rawInstance[propName] = CompositionApi.inject(propName));
 
     } else if (typeof injectDefinitions === "object") {
         const injectPropertyIndexes = [
@@ -52,9 +53,9 @@ export function applyInjectsOnInstance(
             }
 
             if (typeof defaultValue === "function") {
-                instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, true);
+                rawInstance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, true);
             } else {
-                instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, false);
+                rawInstance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, false);
             }
         }
     }
@@ -116,6 +117,7 @@ export function registerComputedValues(
         // mixins of `data`. Since mixins are not supported by Vue anymore, a
         // different mechanism is used now.
         const reactiveInstance = reactive(instance);
+        const rawInstance = toRaw(instance);
 
         // add computed properties but assign "this" context to instance
         Object.getOwnPropertyNames(computedValues || {})
@@ -125,7 +127,7 @@ export function registerComputedValues(
                 const computedSpec = computedValues[key];
                 if (typeof computedSpec === "function") {
                     definePropertyFromRef(
-                        instance,
+                        rawInstance,
                         key,
                         CompositionApi.computed(computedSpec.bind(reactiveInstance)),
                         false,
@@ -139,7 +141,7 @@ export function registerComputedValues(
                     // Vue 3 requires every setter to have a companion getter. A computed value without a getter
                     // is invalid!
                     definePropertyFromRef(
-                        instance,
+                        rawInstance,
                         key,
                         CompositionApi.computed({
                             get: computedSpec.get.bind(reactiveInstance),
