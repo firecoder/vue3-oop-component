@@ -1,4 +1,4 @@
-import type { Ref, UnwrapNestedRefs } from "vue";
+import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
 import type { CompatibleComponentOptions, ObjectProvideOptions, Vue } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 
@@ -215,6 +215,90 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                     this.rawInstance.$,
                 ))
             ;
+        }
+
+        return this;
+    }
+
+    /** @inheritdoc */
+    public watcherForPropertyChange(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+        const reactiveInstance = this.reactiveWrapper;
+        if (reactiveInstance && typeof watchers === "object") {
+            const watchNames = Object.getOwnPropertyNames(watchers)
+                .filter(isNotInternalHookName)
+                .filter((watchName) => watchers && watchers[watchName])
+            ;
+
+            for (const watchName of watchNames) {
+                let watchSpecs = watchers[watchName];
+                if (!Array.isArray(watchSpecs)) {
+                    watchSpecs = [watchSpecs];
+                }
+
+                // watch target can be a getter function. So, define one to read from the reactive instance.
+                const watchTarget = (function (instance, propertyName) {
+                    return function getPropertyValueForWatcher() { return instance[propertyName]; };
+                })(this.reactiveWrapper, watchName);
+
+                for (let i=0; i < watchSpecs.length; i++) {
+                    const currentWatchSpec = watchSpecs[i];
+
+                    if (typeof currentWatchSpec === "function") {
+                        CompositionApi.watch(watchTarget, currentWatchSpec.bind(reactiveInstance));
+
+                    } else {
+                        let handler: WatchCallback | undefined = undefined;
+                        let handlerName: string | undefined = undefined;
+                        let watchOptions: WatchOptions = {};
+
+                        if (typeof currentWatchSpec === "object") {
+                            watchOptions = currentWatchSpec;
+
+                            if (typeof currentWatchSpec.handler === "string") {
+                                handlerName = currentWatchSpec.handler;
+                            } else {
+                                handler = currentWatchSpec.handler;
+                            }
+                        }
+
+                        // decode handler name
+                        else if (typeof currentWatchSpec === "string") {
+                            handlerName = currentWatchSpec;
+                        }
+
+                        if (!handler && handlerName) {
+                            if (handlerName === watchName) {
+                                throw new Error(
+                                    `Invalid watcher defined!
+                                    Can not watch on property ${watchName} and call same property on change!`,
+                                );
+                            }
+
+                            else if (typeof this.rawInstance[handlerName] !== "function") {
+                                throw new Error(
+                                    `Invalid watcher defined!
+                                    The named handler '${handlerName}' for watched property '${watchName}'
+                                    is no member function of the component instance!`,
+                                );
+                            }
+
+                            handler = (function createWatchHandler(propToCall): WatchCallback {
+                                return function watchHandlerAsName(this: Vue, ...args: unknown[]) {
+                                    return this[propToCall].call(this, ...args);
+                                };
+                            })(handlerName).bind(reactiveInstance);
+                        }
+
+                        if (handler) {
+                            CompositionApi.watch(watchTarget, handler, watchOptions);
+                        } else {
+                            CompositionApi.warn(
+                                `No valid watch handler for property "${watchName}" has been provided.`
+                            );
+                        }
+                    }
+                } // for all watchers
+            } // for all names
         }
 
         return this;

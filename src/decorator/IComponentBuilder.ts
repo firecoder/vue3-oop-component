@@ -176,4 +176,16 @@ export interface IComponentBuilder<T extends Vue> {
      * @see #registerLifeCycleHooks()
      */
     registerAdditionalLifeCycleHooks(hookFunctions?: CompatibleComponentOptions<T>): IComponentBuilder<T>;
+
+    /**
+     * Registers watchers on properties, making these properties reactive.
+     *
+     * <p>
+     *     A watcher requires a reactive property to watch on. Otherwise, no change to this property will be propagated
+     *     to the watcher. Hence, the named property to watch out for are converted to reactive properties.
+     * </p>
+     *
+     * @param watchers the watchers to define
+     */
+    watcherForPropertyChange(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T>;
 }
