@@ -18,6 +18,7 @@ export type TLifeCycleHookRegisterFunction =
     | typeof CompositionApi.onActivated
     | typeof CompositionApi.onDeactivated
     | typeof CompositionApi.onRenderTriggered
+    | typeof CompositionApi.onRenderTracked
     | typeof CompositionApi.onErrorCaptured
     | typeof CompositionApi.onServerPrefetch
 ;
@@ -51,7 +52,8 @@ export const $lifeCycleHookRegisterFunctions: {
     updated: typeof CompositionApi.onUpdated,
     activated: typeof CompositionApi.onActivated,
     deactivated: typeof CompositionApi.onDeactivated,
-    render: typeof CompositionApi.onRenderTriggered,
+    renderTracked: typeof CompositionApi.onRenderTracked,
+    renderTriggered: typeof CompositionApi.onRenderTriggered,
     errorCaptured: typeof CompositionApi.onErrorCaptured,
     serverPrefetch: typeof CompositionApi.onServerPrefetch,
 } = {
@@ -100,7 +102,11 @@ export const $lifeCycleHookRegisterFunctions: {
         return CompositionApi.onDeactivated(hook, target);
     },
 
-    render: function render(hook: DebuggerHook, target?: ComponentInternalInstance | null) {
+    renderTracked: function render(hook: DebuggerHook, target?: ComponentInternalInstance | null) {
+        return CompositionApi.onRenderTracked(hook, target);
+    },
+
+    renderTriggered: function render(hook: DebuggerHook, target?: ComponentInternalInstance | null) {
         return CompositionApi.onRenderTriggered(hook, target);
     },
 
@@ -119,6 +125,7 @@ export const $lifeCycleHookNames = Object.getOwnPropertyNames($lifeCycleHookRegi
 export const $internalHookNames = [
     ...$lifeCycleHookNames,
     "data",
+    "render",
 ];
 
 export function isNotInternalHookName(name: string | symbol): boolean {
