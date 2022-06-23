@@ -13,6 +13,15 @@ import type { CompatibleComponentOptions, Vue } from "../vue";
  */
 export interface IComponentBuilder<T extends Vue> {
     /**
+     * The instances to use for accessing property and methods.
+     *
+     * <p>
+     * Basically the reactive instance, since this should be used with the component.
+     * </p>
+     */
+    readonly instance: T & Vue;
+
+    /**
      * The unwrapped instances that is not reactive.
      *
      * <p>

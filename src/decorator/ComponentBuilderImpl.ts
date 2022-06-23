@@ -32,6 +32,11 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
+    public get instance(): T & Vue {
+        return this.reactiveWrapper;
+    }
+
+    /** @inheritdoc */
     public readonly rawInstance: T & Vue;
 
     /** @inheritdoc */
