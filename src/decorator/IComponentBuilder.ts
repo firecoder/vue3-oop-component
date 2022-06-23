@@ -1,4 +1,4 @@
-import type { Ref, UnwrapNestedRefs } from "vue";
+import type { UnwrapNestedRefs } from "vue";
 import type { CompatibleComponentOptions, Vue } from "../vue";
 
 /**
@@ -56,22 +56,6 @@ export interface IComponentBuilder<T extends Vue> {
     createComputedValues(computedValues: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T>;
 
     /**
-     * Defines a property that is a Vue reactive reference.
-     *
-     * <p>
-     *     This project is about best supporting TypeScript classes. Computed properties on instances usually are defined
-     *     in the class but are not expected to have an accessor property of {@code .value}. So, the reference property
-     *     applied where will be unwrapped automatically.
-     * </p>
-     *
-     * @param propertyName the name of the new property
-     * @param vueReference the Vue reactive reference to use for reading and setting values
-     * @param hasSetter set to {@code true} to apply a setter as well. Otherwise, no setter will be created.
-     * @see https://vuejs.org/guide/essentials/reactivity-fundamentals.html#ref-unwrapping-in-reactive-objects
-     */
-    defineReactiveProperty(propertyName: PropertyKey, vueReference: Ref, hasSetter?: boolean): IComponentBuilder<T>;
-
-    /**
      * Inject properties from the Vue dependency injector pool.
      *
      * <p>
@@ -83,38 +67,6 @@ export interface IComponentBuilder<T extends Vue> {
      * @param injectDefinitions
      */
     injectData(injectDefinitions: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T>;
-
-    /**
-     * Checks, whether the named property is a reactive {@code Ref} value or internally registered as reactive.
-     *
-     * <p>
-     *     The named property is checked to be a Vue reactive reference or to have already been converted to such and
-     *     internally stored in the register of all converted properties. There is no way to detect wrappers on
-     *     properties that make them hidden reactive.
-     * </p>
-     *
-     * @param propertyName the name of the property to check
-     */
-    isPropertyReactive(propertyName: PropertyKey): boolean;
-
-    /**
-     * Replace property with a reactive {@code ref} version of it.
-     *
-     * <p>
-     *     The named property is replaced with the return value of {@code ref(rawInstance[propertyName])}.
-     *     A reactive property is needed by watchers. However, the property itself is wrapped into anonymous
-     *     getters and setters to hide the additional reactive indirection. Thus, direct access to the property is
-     *     still possible. The way to access the property value does not change, so the code of the component class
-     *     will not fail. As a result, any "converted" property is registered internally, to avoid duplicate
-     *     conversions as there is no way to distinguish converted properties from ordinary ones. If an already
-     *     converted property is to be converted again, the conversion is aborted but the already internally registered
-     *     reactive wrapper is returned instead.
-     * </p>
-     *
-     * @param propertyName the name of the new property
-     * @return {@code} undefined if the property name is invalid.
-     */
-    makePropertyReactive(propertyName: PropertyKey): Ref | undefined;
 
     /**
      * Provides data from this instance to the Vue injection pool and this to the children of this component.

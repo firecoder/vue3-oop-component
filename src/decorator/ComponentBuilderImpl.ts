@@ -2,7 +2,7 @@ import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
 import type { CompatibleComponentOptions, ObjectProvideOptions, Vue } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 
-import { isReactive, isRef, reactive, ref, toRaw } from "vue";
+import { reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import { $lifeCycleHookRegisterFunctions, isNotInternalHookName } from "./life-cycle-hooks";
 
@@ -25,7 +25,6 @@ function createReferenceSetterFunc(reference: Ref) {
 
 /** @inheritdoc */
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
-    private _alreadyReactiveProperties = new Map<PropertyKey, Ref>();
 
     public constructor(instance: T) {
         this.rawInstance = toRaw(instance);
@@ -56,7 +55,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
                 const computedSpec = computedValues[key];
                 if (typeof computedSpec === "function") {
-                    this.defineReactiveProperty(
+                    this._defineReactiveProperty(
                         key,
                         CompositionApi.computed(computedSpec.bind(this.reactiveWrapper)),
                         false,
@@ -69,7 +68,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 ) {
                     // Vue 3 requires every setter to have a companion getter. A computed value without a getter
                     // is invalid!
-                    this.defineReactiveProperty(
+                    this._defineReactiveProperty(
                         key,
                         CompositionApi.computed({
                             get: computedSpec.get.bind(this.reactiveWrapper),
@@ -84,25 +83,6 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 }
             })
         ;
-
-        return this;
-    }
-
-    /** @inheritdoc */
-    public defineReactiveProperty(property: PropertyKey, vueReference: Ref, hasSetter?: boolean): IComponentBuilder<T> {
-        if (property) {
-            // TODO what to do with previous reactive definitions?
-            // The only case is: A watcher creates a reactive property but this is replaced by a computed value
-            // later. The watcher still holds a reference to the previous reactive property.
-            const previousProperty = this._alreadyReactiveProperties.get(property);
-
-            Object.defineProperty(this.rawInstance, property, {
-                get: createReferenceGetterFunc(vueReference).bind(this.reactiveWrapper),
-                set: hasSetter ? createReferenceSetterFunc(vueReference).bind(this.reactiveWrapper) : undefined,
-            });
-
-            this._alreadyReactiveProperties.set(property, vueReference);
-        }
 
         return this;
     }
@@ -139,7 +119,6 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                     fromProvidedKey = String(injectSpec);
                 }
 
-                this.makePropertyReactive(propName);
                 if (typeof defaultValue === "function") {
                     instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, true);
                 } else {
@@ -149,33 +128,6 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         }
 
         return this;
-    }
-
-    /** @inheritdoc */
-    public isPropertyReactive(propertyName: PropertyKey): boolean {
-        return !!propertyName && !!(
-            isRef(this.rawInstance[propertyName]) ||
-            isReactive(this.rawInstance[propertyName]) ||
-            this._alreadyReactiveProperties.has(propertyName)
-        );
-    }
-
-    /** @inheritdoc */
-    public makePropertyReactive(property: PropertyKey): Ref | undefined {
-        if (property && this._alreadyReactiveProperties.has(property)) {
-            return this._alreadyReactiveProperties.get(property);
-
-        } else if (property) {
-            const reactiveProperty = ref(this.rawInstance[property]);
-
-            this.defineReactiveProperty(
-                property,
-                reactiveProperty,
-                true,
-            );
-            return reactiveProperty;
-        }
-        return undefined;
     }
 
     /** @inheritdoc */
@@ -299,6 +251,21 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                     }
                 } // for all watchers
             } // for all names
+        }
+
+        return this;
+    }
+
+    private _defineReactiveProperty(property: PropertyKey, vueReference: Ref, hasSetter?: boolean): IComponentBuilder<T> {
+        if (property) {
+            // TODO what to do with previous reactive definitions?
+            // The only case is: A watcher creates a reactive property but this is replaced by a computed value
+            // later. The watcher still holds a reference to the previous reactive property.
+
+            Object.defineProperty(this.rawInstance, property, {
+                get: createReferenceGetterFunc(vueReference).bind(this.reactiveWrapper),
+                set: hasSetter ? createReferenceSetterFunc(vueReference).bind(this.reactiveWrapper) : undefined,
+            });
         }
 
         return this;
