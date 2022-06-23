@@ -39,6 +39,23 @@ describe("Vue", () => {
 });
 
 describe("watcherForPropertyChange():", () => {
+    function createFakeConsoleErrorThrowingError(): (() => void) {
+        const origConsoleError = console.error;
+        console.error = sinon.fake((...args: unknown[]) => {
+            if (args && args.length > 0) {
+                for (const arg of args) {
+                    if (arg instanceof Error) {
+                        throw arg;
+                    }
+                }
+            }
+        });
+
+        return () => {
+            console.error = origConsoleError;
+        };
+    }
+
     it("Watch callback is passed to the Vue register function", () => {
         const mockedApi = sinon.mock(CompositionApi);
         const mockedWatch = mockedApi.expects("watch");
@@ -51,6 +68,8 @@ describe("watcherForPropertyChange():", () => {
         builder.watcherForPropertyChange({
             watchedProp: () => undefined,
         });
+        builder.build();
+
         mockedWatch.verify();
         expect(mockedWatch.firstCall.args[1]).toBeTypeOf("function");
     });
@@ -69,6 +88,8 @@ describe("watcherForPropertyChange():", () => {
         builder.watcherForPropertyChange({
             namedWatcher: "memberWatcherCallback",
         });
+        builder.build();
+
         mockedWatch.verify();
         expect(mockedWatch.firstCall.args[1]).toBeTypeOf("function");
     });
@@ -81,6 +102,7 @@ describe("watcherForPropertyChange():", () => {
 
         const builder = new ComponentBuilderImpl({ watchedProp: "initial value" } as Vue);
         builder.watcherForPropertyChange(watcher);
+        builder.build();
         builder.reactiveWrapper.watchedProp = "new value";
 
         await WaitForTriggerToTakeEffect();
@@ -98,6 +120,7 @@ describe("watcherForPropertyChange():", () => {
 
         const builder = new ComponentBuilderImpl({ propToWatch: "initial value" } as Vue);
         builder.watcherForPropertyChange(watcher);
+        builder.build();
         builder.reactiveWrapper.propToWatch = "new value";
 
         await WaitForTriggerToTakeEffect();
@@ -113,9 +136,9 @@ describe("watcherForPropertyChange():", () => {
 
         const builder = new ComponentBuilderImpl({ multiWatchers: 42 } as Vue);
         builder.watcherForPropertyChange(watcher);
+        builder.build();
 
         builder.reactiveWrapper.multiWatchers++;
-
         await WaitForTriggerToTakeEffect();
 
         for (let i=0; i < watcher.multiWatchers.length; i++) {
@@ -134,6 +157,7 @@ describe("watcherForPropertyChange():", () => {
 
         const builder = new ComponentBuilderImpl({ namedWatcher: 42, memberFuncToCall: memberFuncToCall } as Vue);
         builder.watcherForPropertyChange(watcher);
+        builder.build();
         builder.reactiveWrapper.namedWatcher += 2;
 
         await WaitForTriggerToTakeEffect();
@@ -145,18 +169,22 @@ describe("watcherForPropertyChange():", () => {
 
 
     it("Watch callback member function must not be named after property to watch", async () => {
+        const restoreConsoleError = createFakeConsoleErrorThrowingError();
         const builder = new ComponentBuilderImpl({ namedWatcher: 42 } as Vue);
         expect(() => builder.watcherForPropertyChange({
             namedWatcher: "namedWatcher",
-        })).toThrowError("Invalid watcher defined");
+        }).build()).toThrowError("Invalid watcher defined");
+        restoreConsoleError();
     });
 
 
     it("Watch callback member function must exist to be named as watcher", async () => {
+        const restoreConsoleError = createFakeConsoleErrorThrowingError();
         const builder = new ComponentBuilderImpl({ namedWatcher: 42 } as Vue);
         expect(() => builder.watcherForPropertyChange({
             namedWatcher: "someUnknownFunc",
-        })).toThrowError("Invalid watcher defined");
+        }).build()).toThrowError("Invalid watcher defined");
+        restoreConsoleError();
     });
 
 
@@ -168,6 +196,7 @@ describe("watcherForPropertyChange():", () => {
 
         const builder = new ComponentBuilderImpl({ namedHandler: 42, namedCallback } as Vue);
         builder.watcherForPropertyChange(watcherSpec);
+        builder.build();
         builder.reactiveWrapper.namedHandler += 2;
 
         await WaitForTriggerToTakeEffect();
@@ -179,31 +208,36 @@ describe("watcherForPropertyChange():", () => {
 
 
     it("Named watcher callback via options must not be named after property to watch", () => {
+        const restoreConsoleError = createFakeConsoleErrorThrowingError();
         const builder = new ComponentBuilderImpl({ namedHandler: 42 } as Vue);
         expect(() => builder.watcherForPropertyChange({
             namedHandler: { handler: "namedHandler" },
-        })).toThrowError("Invalid watcher defined");
+        }).build()).toThrowError("Invalid watcher defined");
+        restoreConsoleError();
     });
 
 
     it("Named watcher callback via options must exist to be named as watcher", () => {
+        const restoreConsoleError = createFakeConsoleErrorThrowingError();
         const builder = new ComponentBuilderImpl({ namedHandler: 42 } as Vue);
         expect(() => builder.watcherForPropertyChange({
             namedHandler: { handler: "someUnknownProp" },
-        })).toThrowError("Invalid watcher defined");
+        }).build()).toThrowError("Invalid watcher defined");
+        restoreConsoleError();
     });
 
 
     it("Property to watch does not need to exist when activating the watcher", async () => {
         const watcherCallback = sinon.spy();
         const watcherSpec = {
-            notYetExistendProperty: { handler: watcherCallback },
+            notYetExistentProperty: { handler: watcherCallback },
         };
 
         const builder = new ComponentBuilderImpl({ } as Vue);
         builder.watcherForPropertyChange(watcherSpec);
-        builder.reactiveWrapper.notYetExistendProperty = 44;
+        builder.build();
 
+        builder.reactiveWrapper.notYetExistentProperty = 44;
         await WaitForTriggerToTakeEffect();
 
         expect(watcherCallback.callCount).toEqual(1);

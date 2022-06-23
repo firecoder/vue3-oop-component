@@ -10,6 +10,14 @@ import type { CompatibleComponentOptions, Vue } from "../vue";
  *     on the instance that make it compatible with Vue. This builder helps to keep a record af changes in order to
  *     avoid duplications.
  * </p>
+ *
+ * <p>
+ *     Most of the helper functions immediately apply their changes and patches to the component instance that is the
+ *     subject of this builder. However, watchers might want to be notified of changes to "computed" values with
+ *     {@code immediate} call upon creation of the watcher. Hence, there might be a race condition in case the
+ *     computed property is created later on. Then, the initial computed value is not passed-on to the watcher, because
+ *     the watcher was created at first. Hence, watchers are only created when {@code build()} is called.
+ * </p>
  */
 export interface IComponentBuilder<T extends Vue> {
     /**
@@ -42,6 +50,11 @@ export interface IComponentBuilder<T extends Vue> {
 
     /**
      * Finalises the build and returns the fully initialised and patched Component that should be returned to Vue.
+     *
+     * <p>
+     *     Must only be called one and ony be called at the very end of setting up the component instance. Hence,
+     *     custom {@code setup} functions must not call this!
+     * </p>
      */
     build(): T;
 

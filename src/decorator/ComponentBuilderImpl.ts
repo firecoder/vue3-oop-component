@@ -25,6 +25,8 @@ function createReferenceSetterFunc(reference: Ref) {
 
 /** @inheritdoc */
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
+    private _hasBeenFinalised = false;
+    private _watchersToCreate: CompatibleComponentOptions<Vue>["watch"][] = [];
 
     public constructor(instance: T) {
         this.rawInstance = toRaw(instance);
@@ -44,6 +46,15 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public build(): T {
+        if (this._hasBeenFinalised) {
+            CompositionApi.warn(
+                `ComponentBuilder's "build()" function has already been called!
+                Calling a second time risks errors with watchers!`,
+            );
+        }
+        this._hasBeenFinalised = true;
+
+        this._createAllWatchers();
         return this.reactiveWrapper;
     }
 
@@ -179,6 +190,26 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public watcherForPropertyChange(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+        if (watchers) {
+            this._watchersToCreate.push(watchers);
+        }
+
+        return this;
+    }
+
+    private _createAllWatchers(): IComponentBuilder<T> {
+        while (Array.isArray(this._watchersToCreate) && this._watchersToCreate.length > 0) {
+            try {
+                this._performWatcherCreation(this._watchersToCreate.shift());
+            } catch(error) {
+                console.error("Failed to create watcher!", error);
+            }
+        }
+
+        return this;
+    }
+
+    private _performWatcherCreation(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
         const reactiveInstance = this.reactiveWrapper;
         if (reactiveInstance && typeof watchers === "object") {
             const watchNames = Object.getOwnPropertyNames(watchers)
@@ -247,10 +278,18 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                         }
 
                         if (handler) {
-                            CompositionApi.watch(watchTarget, handler, watchOptions);
+                            try {
+                                CompositionApi.watch(watchTarget, handler, watchOptions);
+                            } catch(error) {
+                                console.error(
+                                    `Failed to create watcher on property ${watchName}`,
+                                    currentWatchSpec,
+                                    error,
+                                );
+                            }
                         } else {
                             CompositionApi.warn(
-                                `No valid watch handler for property "${watchName}" has been provided.`
+                                `No valid watch handler for property "${watchName}" has been provided.`,
                             );
                         }
                     }
