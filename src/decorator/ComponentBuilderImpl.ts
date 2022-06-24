@@ -1,5 +1,5 @@
 import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
-import type { CompatibleComponentOptions, ObjectProvideOptions, Vue } from "../vue";
+import type { CompatibleComponentOptions, DefaultData, ObjectProvideOptions, Vue } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 
 import { reactive, toRaw } from "vue";
@@ -56,6 +56,28 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
         this._createAllWatchers();
         return this.reactiveWrapper;
+    }
+
+    /** @inheritdoc */
+    public applyDataValues(dataValues: DefaultData<T>): IComponentBuilder<T> {
+        if (dataValues) {
+            // -- add additional data class properties
+            let data: Record<string, unknown> = {};
+            if (typeof dataValues === "function") {
+                data = (dataValues as (() => Record<string, unknown>)).call(this.reactiveWrapper);
+
+            } else if (typeof dataValues === "object") {
+                data = dataValues as Record<string, unknown>;
+            }
+
+            if (data && typeof data === "object") {
+                Object.getOwnPropertyNames(data)
+                    .forEach((key) => Object.defineProperty(this.rawInstance, key, { value: data[key]}))
+                ;
+            }
+        }
+
+        return this;
     }
 
     /** @inheritdoc */

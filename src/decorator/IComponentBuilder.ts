@@ -1,5 +1,5 @@
 import type { UnwrapNestedRefs } from "vue";
-import type { CompatibleComponentOptions, Vue } from "../vue";
+import type { CompatibleComponentOptions, DefaultData, Vue } from "../vue";
 
 /**
  * Setting up the Vue component from a class is not as trivial as it seems as reactive behaviour must be implemented.
@@ -57,6 +57,19 @@ export interface IComponentBuilder<T extends Vue> {
      * </p>
      */
     build(): T;
+
+    /**
+     * Uses the defined data and created properties on the instance with the defined name and the value.
+     *
+     * <p>
+     *     Usually you will never need this. This function exists to handle the legacy data-option of the component
+     *     decorator. If you use pure classes to write your component behaviour. the data is already defined by these
+     *     classes. However, support for the option is here and thus data will be monkey-patched into the instance.
+     * </p>
+     *
+     * @param dataValues the values to define
+     */
+    applyDataValues(dataValues: DefaultData<T>): IComponentBuilder<T>;
 
     /**
      * Creates computed values in the instance to build and registers these with Vue.
