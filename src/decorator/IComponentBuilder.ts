@@ -69,7 +69,7 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param dataValues the values to define
      */
-    applyDataValues(dataValues: DefaultData<T>): IComponentBuilder<T>;
+    applyDataValues(dataValues?: DefaultData<T>): IComponentBuilder<T>;
 
     /**
      * Creates computed values in the instance to build and registers these with Vue.
@@ -88,7 +88,7 @@ export interface IComponentBuilder<T extends Vue> {
      * @param computedValues
      * @see https://github.com/vuejs/core/issues/6130
      */
-    createComputedValues(computedValues: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T>;
+    createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T>;
 
     /**
      * Inject properties from the Vue dependency injector pool.
@@ -101,7 +101,7 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param injectDefinitions
      */
-    injectData(injectDefinitions: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T>;
+    injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T>;
 
     /**
      * Provides data from this instance to the Vue injection pool and this to the children of this component.
@@ -113,7 +113,7 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param providedValuesSpec
      */
-    provideData(providedValuesSpec: CompatibleComponentOptions<T>["provide"]): IComponentBuilder<T>;
+    provideData(providedValuesSpec?: CompatibleComponentOptions<T>["provide"]): IComponentBuilder<T>;
 
     /**
      * Registers the life-cycle hooks from the builder-instance.
@@ -174,5 +174,5 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param watchers the watchers to define
      */
-    watcherForPropertyChange(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T>;
+    watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T>;
 }

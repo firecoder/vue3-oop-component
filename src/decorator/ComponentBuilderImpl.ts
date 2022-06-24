@@ -59,7 +59,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public applyDataValues(dataValues: DefaultData<T>): IComponentBuilder<T> {
+    public applyDataValues(dataValues?: DefaultData<T>): IComponentBuilder<T> {
         if (dataValues) {
             // -- add additional data class properties
             let data: Record<string, unknown> = {};
@@ -81,7 +81,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public createComputedValues(computedValues: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T> {
+    public createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T> {
         if (!computedValues) {
             return this;
         }
@@ -126,7 +126,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public injectData(injectDefinitions: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T> {
+    public injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T> {
         const instance = this.reactiveWrapper;
 
         if (Array.isArray(injectDefinitions)) {
@@ -169,7 +169,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public provideData(providedValuesSpec: CompatibleComponentOptions<T>["provide"]): IComponentBuilder<T> {
+    public provideData(providedValuesSpec?: CompatibleComponentOptions<T>["provide"]): IComponentBuilder<T> {
         let providedValues = providedValuesSpec as ObjectProvideOptions;
         if (typeof providedValuesSpec === "function") {
             providedValues = providedValuesSpec.apply(this.reactiveWrapper);
@@ -211,7 +211,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public watcherForPropertyChange(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+    public watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
         if (watchers) {
             this._watchersToCreate.push(watchers);
         }
@@ -231,7 +231,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         return this;
     }
 
-    private _performWatcherCreation(watchers: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+    private _performWatcherCreation(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
         const reactiveInstance = this.reactiveWrapper;
         if (reactiveInstance && typeof watchers === "object") {
             const watchNames = Object.getOwnPropertyNames(watchers)
