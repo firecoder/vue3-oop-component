@@ -24,6 +24,8 @@ import type {
     MethodsWithoutThis,
     PropsDefinition,
 } from "./basic-types";
+import type { IComponentBuilder } from "../decorator/IComponentBuilder";
+
 
 export interface CompatibleComponentOptions<
     V extends Vue,
@@ -37,11 +39,30 @@ export interface CompatibleComponentOptions<
     props?: PropsDef;
     methods?: Methods;
 
+    /**
+     * Optional custom component setup function.
+     *
+     * <p>
+     *     The component instance has already been created and this function is executed in the context of its
+     *     reactive wrapper. The passed-on builder can be used to fetch original instance and perform some more
+     *     monkey-patching of the instance.
+     * </p>
+     *
+     * <p>
+     *     All the Vue provided properties have already been applied to the instance and the Vue internal component
+     *     is available as {@code this.$}.
+     * </p>
+     *
+     * @param builder the helper builder with utility functions to patch the instance.
+     * @param props the original properties as passed by Vue
+     * @param ctx the Vue setup context
+     */
     setup?: (
-        this: VueClass<V>,
-        props: Props,
-        ctx: SetupContext
-    ) => VueClass<V>;
+        this: V,
+        builder: IComponentBuilder<V>,
+        props: ComponentInternalInstance["props"],
+        ctx: SetupContext,
+    ) => void;
 
     render?(createElement: CreateElement): VNode;
     renderError?(createElement: CreateElement, err: Error): VNode;
