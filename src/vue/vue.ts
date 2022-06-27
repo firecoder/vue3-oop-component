@@ -16,8 +16,12 @@ import type {
     ComponentCustomProps,
     ComponentOptionsBase,
     EmitsOptions,
-    ObjectEmitsOptions, WatchOptions, WatchStopHandle,
+    ObjectEmitsOptions,
+    WatchOptions,
+    WatchStopHandle,
 } from "vue";
+
+import type { ComponentWithCustomSetup } from "../decorator/component-decorator-types";
 
 import {
     getCurrentInstance,
@@ -63,12 +67,12 @@ export type Vue<
     PublicProps,
     DefaultProps,
     true
-> & ClassComponentHooks & CustomClassImplementation;
+> & ClassComponentHooks & CustomClassImplementation & ComponentWithCustomSetup;
 
 // change to never
 export type VueBase = Vue<any, string[]>;
 
-// unlike vue's vue-class-component, no internal of VueStatic is exposed by default. VueStatic is regarded as
+// unlike vue´s vue-class-component, no internal of VueStatic is exposed by default. VueStatic is regarded as
 // internal and unstable API. Maybe this API change with next major version like with Vue2 to Vue3.
 // By omitting this type, a lot of recursive, forward-looking type declaration is being
 // omitted too. This makes the code more lean and understandable.
@@ -178,6 +182,10 @@ class VueComponentBaseImpl implements VueBase {
         } else {
             return watch(source, cb, options);
         }
+    }
+
+    public setup(): void {
+        // do nothing special here. This is just a stub for child classes!
     }
 }
 
