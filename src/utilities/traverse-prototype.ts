@@ -44,6 +44,40 @@ export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>
 }
 
 /**
+ * Collects "static" property of all classes from the prototype chain.
+ *
+ * <p>
+ *     "static" properties are not inherited down the prototype chain. Hence, this function helps to get a collection
+ *     of the named property from all the classes in the prototype chain - a.k.a. from all parent classes and the
+ *     child class.
+ * </p>
+ *
+ * @param clazz the class to collect static property from and its prototype chain.
+ * @param property the name or key of property to collect.
+ */
+export function collectStaticPropertyFromPrototypeChain<T>(
+    clazz: AnyClass | AnyInstance,
+    property: string | symbol,
+): T[] {
+
+    if (!clazz || !property) {
+        return [];
+    }
+
+    const collectedProperties: T[] = (getAllBaseClasses(clazz) || [])
+        .filter((parentClass) => Object.hasOwn(parentClass, property))
+        .map((parentClass) => parentClass[property] as T)
+    ;
+
+    if (Object.hasOwn(clazz, property)) {
+        collectedProperties.push(clazz[property] as T);
+    }
+
+    return collectedProperties;
+}
+
+
+/**
  * Collects "static" functions on classes from the prototype chain.
  *
  * @param clazz the class to collect static functions from and its prototype chain.
@@ -54,19 +88,40 @@ export function collectStaticFunctionFromPrototypeChain<T = AnyFunction>(
     funcName: string,
 ): T[] {
 
-    if (!clazz || !funcName) {
-        return [];
-    }
-
-    const collectedFunctions: T[] = (getAllBaseClasses(clazz) || [])
-        .filter((parentClass) => Object.hasOwn(parentClass, funcName))
-        .map((parentClass) => parentClass[funcName] as T)
-        .filter((func) => func && typeof func === "function")
+    return collectStaticPropertyFromPrototypeChain<T>(clazz, funcName)
+        .filter((propertyValue) => typeof propertyValue === "function")
     ;
+}
 
-    if (Object.hasOwn(clazz, funcName) && typeof clazz[funcName] === "function") {
-        collectedFunctions.push(clazz[funcName]);
+
+/**
+ * Get the named property from the parent instance.
+ *
+ * <p>
+ *     Fetches the property from the nearest (first) parent that has such a property. This function is useful for
+ *     dynamic chaining of classes and dynamic inheriting properties or functions.
+ * </p>
+ *
+ * @param clazz the check its parents .
+ * @param property the name of functions to collect.
+ */
+export function getPropertyFromParentClassDefinition<T>(
+    clazz: AnyClass | AnyInstance,
+    property: string | symbol,
+): T | undefined {
+    if (!clazz) {
+        return undefined;
     }
 
-    return collectedFunctions;
+    const allParentClasses = getAllBaseClasses(clazz);
+    allParentClasses.reverse(); // because list starts with top class, not with immediate parent
+
+    for (const parentClass of allParentClasses) {
+        const parentClassDefinition = parentClass.prototype as Record<string | symbol, T>;
+        if (parentClassDefinition && Object.hasOwn(parentClassDefinition, property)) {
+            return parentClassDefinition[property];
+        }
+    }
+
+    return undefined;
 }
