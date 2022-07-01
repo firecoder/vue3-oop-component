@@ -76,13 +76,12 @@ export type VueBase = Vue<any, string[]>;
 // internal and unstable API. Maybe this API change with next major version like with Vue2 to Vue3.
 // By omitting this type, a lot of recursive, forward-looking type declaration is being
 // omitted too. This makes the code more lean and understandable.
-export interface VueConstructor<V extends VueBase = VueBase> {
+export interface VueConstructor<V extends Vue = VueBase> {
     new (...args: unknown[]): V;
 }
 
-export type VueClass<V> = VueConstructor & {
-    new (...args: unknown[]): V & Vue;
-};
+// for compatibility with Vue 2
+export type VueClass<V extends Vue> = VueConstructor<V>;
 
 type IndexableReturnsAny<T> = T & { [key: string]: any };
 
