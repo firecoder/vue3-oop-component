@@ -85,21 +85,23 @@ export type VueClass<V extends Vue> = VueConstructor<V>;
 
 type IndexableReturnsAny<T> = T & { [key: string]: any };
 
-class VueComponentBaseImpl implements VueBase {
-
+/**
+ * This is the base implementation of class component instances implementing interface {@code Vue}.
+ *
+ * <p>
+ *     The base class for all Vue class components handled by the component decorator provides the properties, we have
+ *     become accustomed using Vue 2. It tries to be a compatible replacement for old Vue 2 "base class".
+ * </p>
+ */
+export class VueComponentBaseImpl implements VueBase {
     /**
      * Reads and sets the internal Vue instance and all properties!
      */
     public constructor() {
         const vueInstance = getCurrentInstance();
-        if (!vueInstance) {
-            throw new Error(
-                "Failed to access internal Vue companion instance. Maybe Vue API has changed or the instance " +
-                "is not created by Vue!",
-            );
-        }
 
-        this.$ = vueInstance;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.$ = vueInstance!;
         this._applyProperties();
     }
 
@@ -118,6 +120,12 @@ class VueComponentBaseImpl implements VueBase {
 
     /**
      * This will be set at runtime after the instance has been created, so it is not available with the constructor!
+     *
+     * <p>
+     *     If this class or a derived class is created within unit tests directly, without any internal Vue instance,
+     *     this value will be {@code undefined}. However, since this is not the case at runtime, this property
+     *     is marked as NOT {@code undefined}. So, be aware of that during unit testing.
+     * </p>
      */
     public readonly $!: ComponentInternalInstance;
 
@@ -144,7 +152,7 @@ class VueComponentBaseImpl implements VueBase {
     }
 
     public get $nextTick(): (<T extends ThisType<VueBase>>(fn: ((this: T) => void) | undefined) => Promise<void>) {
-        return this.$.n || nextTick.bind(this.$.proxy);
+        return this.$?.n || nextTick.bind(this.$?.proxy);
     }
 
     public get $parent(): ComponentPublicInstance | null {
@@ -160,7 +168,7 @@ class VueComponentBaseImpl implements VueBase {
     }
 
     public get $refs() {
-        return this.$.refs;
+        return this.$?.refs;
     }
 
     public get $root(): ComponentPublicInstance | null {
