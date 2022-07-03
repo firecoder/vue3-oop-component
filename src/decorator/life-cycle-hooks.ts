@@ -129,8 +129,9 @@ export const $internalHookNames = [
 ];
 
 export function isNotInternalHookName(name: string | symbol): boolean {
-    return name && (
-        typeof name === "symbol" ||
-        (typeof name === "string" && ($internalHookNames.indexOf(name) < 0))
-    ) && true || false;
+    return !isInternalHookName(name);
+}
+
+export function isInternalHookName(name: string | symbol): boolean {
+    return !!(name && typeof name === "string" && $internalHookNames.indexOf(name) >= 0);
 }
