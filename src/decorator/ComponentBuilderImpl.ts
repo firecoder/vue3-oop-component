@@ -1,6 +1,7 @@
 import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
 import type { CompatibleComponentOptions, DefaultData, ObjectProvideOptions, Vue } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
+import type { VueClassComponent } from "./component-decorator-types";
 
 import { reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
@@ -25,12 +26,24 @@ function createReferenceSetterFunc(reference: Ref) {
 
 /** @inheritdoc */
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
+    private _component: VueClassComponent<T>;
     private _hasBeenFinalised = false;
+    private _rawInstance?: T & Vue;
+    private _reactiveWrapper?: UnwrapNestedRefs<T & Vue>;
     private _watchersToCreate: CompatibleComponentOptions<Vue>["watch"][] = [];
 
-    public constructor(instance: T) {
-        this.rawInstance = toRaw(instance);
-        this.reactiveWrapper = reactive(instance as object) as UnwrapNestedRefs<T>;
+    public constructor(component: VueClassComponent<T>) {
+        if (!component) {
+            throw new Error("No component has been provided to create and use.");
+        }
+        this._component = component;
+    }
+
+    public createAndUseNewInstance() {
+        const instance = new this._component();
+        this._rawInstance = toRaw(instance);
+        this._reactiveWrapper = reactive(instance as object) as UnwrapNestedRefs<T>;
+        return this;
     }
 
     /** @inheritdoc */
@@ -39,10 +52,14 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public readonly rawInstance: T & Vue;
+    public get rawInstance(): T & Vue {
+        return this._rawInstance;
+    }
 
     /** @inheritdoc */
-    public readonly reactiveWrapper: UnwrapNestedRefs<T & Vue>;
+    public get reactiveWrapper(): UnwrapNestedRefs<T & Vue> {
+        return this._reactiveWrapper;
+    }
 
     /** @inheritdoc */
     public build(): T {

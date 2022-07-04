@@ -11,6 +11,7 @@ export * from "./utility-types";
 // export * from "./types";
 export * from "./decorator/IComponentBuilder";
 export * from "./decorator/decorator";
+export * from "./decorator/component-decorator-types";
 export {
     isInternalHookName,
     isNotInternalHookName,
