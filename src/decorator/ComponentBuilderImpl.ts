@@ -1,5 +1,5 @@
 import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
-import type { CompatibleComponentOptions, DefaultData, ObjectProvideOptions, Vue } from "../vue";
+import type { CompatibleComponentOptions, DefaultData, ObjectProvideOptions, Vue, VueComponentBaseImpl } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 import type { VueClassComponent } from "./component-decorator-types";
 
@@ -98,7 +98,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public applyDataValues(dataValues?: DefaultData<T>): IComponentBuilder<T> {
+    public applyDataValues(dataValues?: DefaultData<T>): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         if (dataValues) {
@@ -122,7 +122,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T> {
+    public createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         if (!computedValues) {
@@ -169,7 +169,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T> {
+    public injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         const instance = this.reactiveWrapper;
@@ -214,7 +214,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public provideData(providedValuesSpec?: CompatibleComponentOptions<T>["provide"]): IComponentBuilder<T> {
+    public provideData(providedValuesSpec?: CompatibleComponentOptions<T>["provide"]): ComponentBuilderImpl<T> {
         let providedValues = providedValuesSpec as ObjectProvideOptions;
         if (typeof providedValuesSpec === "function") {
             providedValues = providedValuesSpec.apply(this.reactiveWrapper);
@@ -239,11 +239,10 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public registerAdditionalLifeCycleHooks(hookFunctions?: CompatibleComponentOptions<T>): IComponentBuilder<T> {
+    public registerAdditionalLifeCycleHooks(hookFunctions?: CompatibleComponentOptions<T>): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         const rawHookFunctions = hookFunctions && toRaw(hookFunctions) || undefined;
-
         if (rawHookFunctions) {
             Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions)
                 .filter((hookName) =>  typeof rawHookFunctions[hookName] === "function")
@@ -263,7 +262,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+    public watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): ComponentBuilderImpl<T> {
         if (watchers) {
             this._watchersToCreate.push(watchers);
         }
@@ -283,7 +282,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         return this;
     }
 
-    private _performWatcherCreation(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+    private _performWatcherCreation(watchers?: CompatibleComponentOptions<Vue>["watch"]): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         const reactiveInstance = this.reactiveWrapper;
@@ -376,7 +375,9 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         return this;
     }
 
-    private _defineReactiveProperty(property: PropertyKey, vueReference: Ref, hasSetter?: boolean): IComponentBuilder<T> {
+    private _defineReactiveProperty(
+        property: PropertyKey, vueReference: Ref, hasSetter?: boolean,
+    ): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
         if (property) {
