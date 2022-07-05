@@ -1,4 +1,4 @@
-import type { Vue, VueClass } from "./vue-base-type";
+import type { Vue, VueClass } from "./vue";
 import type { UnionToIntersection, ExtractInstance } from "./utility-types";
 
 export type MixedVueClass<Mixins extends VueClass<Vue>[]> =
