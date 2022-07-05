@@ -1,5 +1,6 @@
 import type { UnwrapNestedRefs } from "vue";
 import type { CompatibleComponentOptions, DefaultData, Vue } from "../vue";
+import type { VueClassComponent } from "./component-decorator-types";
 
 /**
  * Setting up the Vue component from a class is not as trivial as it seems as reactive behaviour must be implemented.
@@ -20,6 +21,11 @@ import type { CompatibleComponentOptions, DefaultData, Vue } from "../vue";
  * </p>
  */
 export interface IComponentBuilder<T extends Vue> {
+    /**
+     * The class the instance is created from.
+     */
+    readonly componentClass:  VueClassComponent<T>;
+
     /**
      * The instances to use for accessing property and methods.
      *

@@ -26,29 +26,49 @@ function createReferenceSetterFunc(reference: Ref) {
 
 /** @inheritdoc */
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
-    private _component: VueClassComponent<T>;
+    private _component?: VueClassComponent<T>;
     private _hasBeenFinalised = false;
     private _rawInstance?: T & Vue;
     private _reactiveWrapper?: UnwrapNestedRefs<T & Vue>;
     private _watchersToCreate: CompatibleComponentOptions<Vue>["watch"][] = [];
 
-    public constructor(component: VueClassComponent<T>) {
-        if (!component) {
-            throw new Error("No component has been provided to create and use.");
+    public constructor(instanceOrClass?: ((T & Vue) | VueClassComponent<T>)) {
+        if (typeof instanceOrClass === "function") {
+            this.setComponentClass(instanceOrClass);
+
+        } else if (typeof instanceOrClass === "object") {
+            this.setComponentClass(instanceOrClass.constructor);
+            this.instance = instanceOrClass;
         }
-        this._component = component;
     }
 
-    public createAndUseNewInstance() {
-        const instance = new this._component();
-        this._rawInstance = toRaw(instance);
-        this._reactiveWrapper = reactive(instance as object) as UnwrapNestedRefs<T>;
+    public createAndUseNewInstance(): ComponentBuilderImpl<T> {
+        if (typeof this._component !== "function") {
+            throw new Error("Failed to create new component! No class for the component has been provided.");
+        }
+
+        this.instance = new this._component();
         return this;
+    }
+
+    /** @inheritdoc */
+    public get componentClass(): VueClassComponent<T> {
+        return this._component || this.rawInstance?.constructor;
     }
 
     /** @inheritdoc */
     public get instance(): T & Vue {
         return this.reactiveWrapper;
+    }
+
+    public set instance(newInstance: T & Vue) {
+        if (typeof newInstance === "object") {
+            this._rawInstance = toRaw(newInstance);
+            this._reactiveWrapper = reactive(this._rawInstance);
+        } else {
+            this._rawInstance = undefined;
+            this._reactiveWrapper = undefined;
+        }
     }
 
     /** @inheritdoc */
@@ -63,6 +83,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public build(): T {
+        this._checkValidInstanceAndThrowError();
+
         if (this._hasBeenFinalised) {
             CompositionApi.warn(
                 `ComponentBuilder's "build()" function has already been called!
@@ -77,6 +99,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public applyDataValues(dataValues?: DefaultData<T>): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         if (dataValues) {
             // -- add additional data class properties
             let data: Record<string, unknown> = {};
@@ -99,6 +123,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         if (!computedValues) {
             return this;
         }
@@ -144,6 +170,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         const instance = this.reactiveWrapper;
 
         if (Array.isArray(injectDefinitions)) {
@@ -212,6 +240,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public registerAdditionalLifeCycleHooks(hookFunctions?: CompatibleComponentOptions<T>): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         const rawHookFunctions = hookFunctions && toRaw(hookFunctions) || undefined;
 
         if (rawHookFunctions) {
@@ -224,6 +254,11 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
             ;
         }
 
+        return this;
+    }
+
+    public setComponentClass(component: VueClassComponent<T>): ComponentBuilderImpl<T> {
+        this._component = component;
         return this;
     }
 
@@ -249,6 +284,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     private _performWatcherCreation(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         const reactiveInstance = this.reactiveWrapper;
         if (reactiveInstance && typeof watchers === "object") {
             const watchNames = Object.getOwnPropertyNames(watchers)
@@ -340,6 +377,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     private _defineReactiveProperty(property: PropertyKey, vueReference: Ref, hasSetter?: boolean): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
         if (property) {
             // TODO what to do with previous reactive definitions?
             // The only case is: A watcher creates a reactive property but this is replaced by a computed value
@@ -352,5 +391,14 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         }
 
         return this;
+    }
+
+    private _checkValidInstanceAndThrowError(): void {
+        if (this._rawInstance === undefined) {
+            throw new Error(
+                "Failed to build component! No instance has been created yet. " +
+                "Please call 'createAndUseNewInstance()' first!",
+            );
+        }
     }
 }
