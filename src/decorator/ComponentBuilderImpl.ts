@@ -6,6 +6,7 @@ import type { VueClassComponent } from "./component-decorator-types";
 import { reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import { $lifeCycleHookRegisterFunctions, isNotInternalHookName } from "./life-cycle-hooks";
+import { collectStaticPropertyFromPrototypeChain } from "../utilities/traverse-prototype";
 
 /*
  * The getter and setter created here do not hold any memory context to the builder. Hence, the builder can be subject
@@ -166,6 +167,45 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         ;
 
         return this;
+    }
+
+    /**
+     * Retrieves the options for the component from its static storage or from an instance in case this is a mixin.
+     *
+     * <p>
+     *     All Vue component classes prepared by the component decorator store the decorator options as static property.
+     *     However, if this class is used as a mixin, then its static options property is not copied to the mixin
+     *     result. Therefore, an instance is created to fetch the options from this instance instead.
+     * </p>
+     *
+     * @return a list of available options from all parent classes with no {@code undefined} items. The list may be empty.
+     */
+    public getOptionsForComponent(): CompatibleComponentOptions<T>[] {
+        type VueComponent = typeof VueComponentBaseImpl & {
+            _getVueClassComponentOptions(): CompatibleComponentOptions<T>[];
+        };
+
+        // first try to read the options from all parent classes. With mixins this will fail. Then use an instance
+        // of the component.
+        let allOptions = (
+            this._component && collectStaticPropertyFromPrototypeChain<VueClassComponent<T>["__vccOpts"]>(
+                this._component, "__vccOpts",
+            ) || [])
+            .map((vccOptions) => vccOptions.__component_decorator_original_options)
+            .filter((options) => !!options)
+        ;
+
+
+        // no options have been found, create an instance and try this way
+        if (!allOptions?.length && typeof this._component === "function") {
+            const instance = new this._component();
+            if (typeof (instance as VueComponent)._getVueClassComponentOptions === "function") {
+                allOptions = ((instance as VueComponent)._getVueClassComponentOptions() || [])
+                    .filter((options) => !!options);
+            }
+        }
+
+        return (allOptions || []);
     }
 
     /** @inheritdoc */

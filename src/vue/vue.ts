@@ -22,6 +22,7 @@ import type {
 } from "vue";
 
 import type { ComponentWithCustomSetup } from "../decorator/component-decorator-types";
+import type { CompatibleComponentOptions } from "./legacy-component-options";
 
 import {
     getCurrentInstance,
@@ -193,6 +194,14 @@ export class VueComponentBaseImpl implements VueBase {
 
     public setup(): void {
         // do nothing special here. This is just a stub for child classes!
+    }
+
+    /**
+     * This is used internally by the component decorator.
+     * @private
+     */
+    protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueComponentBaseImpl>[] {
+        return [];
     }
 }
 
