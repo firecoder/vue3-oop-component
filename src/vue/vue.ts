@@ -27,6 +27,7 @@ import type { CompatibleComponentOptions } from "./legacy-component-options";
 import {
     getCurrentInstance,
     nextTick,
+    toRaw,
     watch,
 } from "vue";
 
@@ -107,10 +108,12 @@ export class VueComponentBaseImpl implements VueBase {
     }
 
     private _applyProperties(): VueComponentBaseImpl {
+        const me = toRaw(this);
+
         // set the properties as passed by Vue
-        Object.keys(this.$props || {}).forEach((key) => {
-            Object.defineProperty(this, key, {
-                get() { return (this.$props || {})[key]; },
+        Object.keys(me.$props || {}).forEach((key) => {
+            Object.defineProperty(me, key, {
+                get() { return (me.$props || {})[key]; },
                 enumerable: true,
                 writable: false,
             });
