@@ -15,6 +15,10 @@ import type {
 
 export type CreateElement = typeof h;
 
+export interface Constructor<T = any> {
+    new (...args: any[]): T;
+}
+
 /**
  * When the `Computed` type parameter on `ComponentOptions` is inferred,
  * it should have a property with the return type of every get-accessor.
@@ -35,8 +39,9 @@ export type MethodsWithoutThis<T> = {
 };
 
 // see: https://v2.vuejs.org/v2/api/#provide-inject
-export type ObjectInjectOptions = Record<string | symbol, string | symbol | {
-    from?: string | symbol;
+export type InjectKey = string | symbol;
+export type ObjectInjectOptions = Record<InjectKey, InjectKey | {
+    from?: InjectKey;
     default?: unknown;
 }>;
 export type ComponentInjectOptions = string[] | ObjectInjectOptions;
