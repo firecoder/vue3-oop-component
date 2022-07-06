@@ -42,9 +42,9 @@ export type ObjectInjectOptions = Record<string | symbol, string | symbol | {
 export type ComponentInjectOptions = string[] | ObjectInjectOptions;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export type ObjectProvideOptions = Exclude<ComponentProvideOptions, Function>
+export type ObjectProvideOptions = Exclude<ComponentProvideOptions, Function>;
 
-export type PropValidator<T> = PropOptions<T> | PropType<T>
+export type PropValidator<T> = PropOptions<T> | PropType<T> | null;
 
 export interface PropOptions<T = any> {
     type?: PropType<T>
@@ -55,11 +55,12 @@ export interface PropOptions<T = any> {
 
 export type RecordPropsDefinition<T> = {
     [K in keyof T]: PropValidator<T[K]>
-}
-export type ArrayPropsDefinition<T> = (keyof T)[]
+};
+export type ArrayPropsDefinition<T> = (keyof T)[];
 export type PropsDefinition<T> =
     | ArrayPropsDefinition<T>
     | RecordPropsDefinition<T>
+;
 
 export interface ComputedOptions<T> extends WritableComputedOptions<T> {
     cache?: boolean
@@ -75,4 +76,5 @@ export type ComponentWatchOptionItem = WatchOptionItem | WatchOptionItem[];
 export type ComponentWatchOptions = Record<string, ComponentWatchOptionItem>;
 
 export type DebuggerHook = (e: DebuggerEvent) => void;
-export type ErrorCapturedHook<TError = unknown> = (err: TError, instance: ComponentPublicInstance | null, info: string) => boolean | void;
+export type ErrorCapturedHook<TError = unknown> =
+    (err: TError, instance: ComponentPublicInstance | null, info: string) => boolean | void;

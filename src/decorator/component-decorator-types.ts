@@ -49,5 +49,4 @@ export interface VueClassComponent<V extends Vue = Vue> extends VueClass<V> {
      * </p>
      */
     beforeCreate?(this: ComponentInternalInstance): void;
-};
-
+}
