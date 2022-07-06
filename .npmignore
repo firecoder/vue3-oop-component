@@ -1,0 +1,19 @@
+# ignore for package creation
+
+vite.config.ts
+tsconfig*
+src/vite-env.d.ts 
+test
+
+.idea
+*~
+*.tgz
+
+.commitlintrc.cjs
+.eslintignore
+.eslintrc.cjs
+.githooks
+.gitignore
+.idea
+.npmignore
+
