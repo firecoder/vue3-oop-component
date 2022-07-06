@@ -1,5 +1,5 @@
 {
-  "name": "vue3-typescript-compatibility",
+  "name": "@nexxar/vue3-ts-class-compatibility",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
