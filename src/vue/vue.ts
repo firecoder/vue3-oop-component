@@ -27,9 +27,9 @@ import type { CompatibleComponentOptions } from "./legacy-component-options";
 import {
     getCurrentInstance,
     nextTick,
-    toRaw,
     watch,
 } from "vue";
+import { defineNewLinkedProperties } from "../utilities/properties";
 
 export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
 
@@ -104,22 +104,7 @@ export class VueComponentBaseImpl implements VueBase {
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         this.$ = vueInstance!;
-        this._applyProperties();
-    }
-
-    private _applyProperties(): VueComponentBaseImpl {
-        const me = toRaw(this);
-
-        // set the properties as passed by Vue
-        Object.keys(me.$props || {}).forEach((key) => {
-            Object.defineProperty(me, key, {
-                get() { return (me.$props || {})[key]; },
-                enumerable: true,
-                writable: false,
-            });
-        });
-
-        return this;
+        defineNewLinkedProperties(this, vueInstance?.props);
     }
 
     /**
