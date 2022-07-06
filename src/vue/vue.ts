@@ -100,10 +100,16 @@ export class VueComponentBaseImpl implements VueBase {
      * Reads and sets the internal Vue instance and all properties!
      */
     public constructor() {
-        const vueInstance = getCurrentInstance();
+        let vueInstance = getCurrentInstance();
 
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.$ = vueInstance!;
+        // use only getter and non-enumerable to avoid Vue to complain about reserved prefix "$".
+        Object.defineProperty(this, "$", {
+            get: () => vueInstance,
+            set: (newValue) => { vueInstance = newValue; },
+            enumerable: false,
+            configurable: true,
+        });
+
         defineNewLinkedProperties(this, vueInstance?.props);
     }
 
