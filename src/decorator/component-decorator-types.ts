@@ -4,6 +4,21 @@ import type {
 } from "vue";
 import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
 
+// to support vue-property-decorator package
+export type ComponentOptions<V> = CompatibleComponentOptions<V>;
+
+/**
+ * A custom component setup function/method that will be called once at the very end of the setup.
+ */
+export type CustomComponentSetupFunction<V extends Vue = Vue> = Pick<CompatibleComponentOptions<V>, "setup">["setup"];
+
+/**
+ * A class providing the custom setup function to the component decorator.
+ */
+export interface ComponentWithCustomSetup<V extends Vue = Vue> extends VueClass<V> {
+    setup?: CustomComponentSetupFunction<V>;
+}
+
 /**
  * This is the component setup functions that is used to create the instance from the class component.
  *
@@ -30,7 +45,7 @@ export type VueComponentSetupFunction = Pick<ComponentOptionsWithObjectProps, "s
  *     the class component property.
  * </p>
  */
-export interface VueClassComponent<V extends Vue = Vue> extends VueClass<V> {
+export interface VueClassComponent<V extends Vue = Vue> extends ComponentWithCustomSetup<V> {
     /**
      * This is the Vue 3 "trigger" to make a class work as component.
      */

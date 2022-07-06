@@ -4,6 +4,9 @@
  * // ComponentOptions<Vue>
  * // Constructor in types/options
  */
+import { Component } from "./decorator/component-decorator";
+export default Component; // for compatibility with original vue-class-component
+export { Component };
 
 export * from "./vue";
 export * from "./mixins";

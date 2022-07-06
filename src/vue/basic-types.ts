@@ -58,6 +58,7 @@ export type RecordPropsDefinition<T> = {
 };
 export type ArrayPropsDefinition<T> = (keyof T)[];
 export type PropsDefinition<T> =
+    | string[]
     | ArrayPropsDefinition<T>
     | RecordPropsDefinition<T>
 ;

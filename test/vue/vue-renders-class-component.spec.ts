@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import MessageTextAsClass from ".//test-components/MessageTextAsClass.vue";
 import MessageTextWithScriptSetup from ".//test-components/MessageTextWithScriptSetup.vue";
 import MessageTextWithDefineComponent from ".//test-components/MessageTextWithDefineComponent.vue";
+import MessageTextAsDecoratedClass from ".//test-components/MessageTextAsDecoratedClass.vue";
 
 interface ComponentSpec {
     name: string,
@@ -19,6 +20,10 @@ describe("Components defines with various techniques are possible", () => {
         name: "MessageTextWithDefineComponent",
         component: MessageTextWithDefineComponent,
         description: "Defined with defineComponent",
+    }, {
+        name: "MessageTextAsDecoratedClass",
+        component: MessageTextAsDecoratedClass,
+        description: "Defined with new component decorator",
     }, {
         name: "MessageTextWithScriptSetup",
         component: MessageTextWithScriptSetup,
