@@ -1,6 +1,6 @@
 # just for now, until releases are valuable to be included
 lib
-dist
+#dist
 package-lock.json
 
 
@@ -95,7 +95,6 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -127,7 +126,6 @@ dist
 .DS_Store
 
 # .NET
-/dist
 Debug
 obj
 .run
