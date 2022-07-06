@@ -30,13 +30,10 @@ export function defineNewLinkedProperties<T extends object>(
             .forEach((key) => {
                 Object.defineProperty(rawInstance, key, {
                     get() { return unref(reactiveSource[key]); },
-                    set(newValue: unknown) {
-                        const prop = reactiveSource[key];
-                        if (isRef(prop)) {
-                            prop.value = newValue;
-                        } else {
-                            reactiveSource[key] = newValue;
-                        }
+                    set() {
+                        // ignore. classes do set property values in all derived constructors.
+                        // So, setting the property is always done. However, since properties in Vue must not be
+                        // overwritten, setting a new value must be available but silently ignored.
                     },
                     configurable: true,
                     enumerable: true,
