@@ -1,19 +1,11 @@
 /**
- * This file is inspired by package "vue-class-component". Its content is taked from there and adapted to the needs
+ * This file is inspired by package "vue-class-component". Its content is taken from there and adapted to the needs
  * of this package.
  *
  * @see: https://github.com/vuejs/vue-class-component/blob/next/src/vue.ts
  */
-import type { ComponentOptions } from "vue";
 import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
-export declare type ClassDecorator = (ConstructorFunction: typeof Vue) => void;
-export declare type PropertyDecorator = (target: Vue, key: string) => void;
-export declare type ParameterDecorator = (target: Vue, key: string, index: number) => void;
-export declare type VueDecorator = ClassDecorator | PropertyDecorator | ParameterDecorator;
-export declare type ClassDecoratorFactoryFunction = (options: ComponentOptions<Vue>, key: string) => void;
-export declare type PropertyDecoratorFactoryFunction = (options: ComponentOptions<Vue>, key: string) => void;
-export declare type ParameterDecoratorFactoryFunction = (options: ComponentOptions<Vue>, key: string, index: number) => void;
-export declare type VueDecoratorFactoryFunction = ClassDecoratorFactoryFunction | PropertyDecoratorFactoryFunction | ParameterDecoratorFactoryFunction;
+export declare type VueDecorator = ClassDecorator | PropertyDecorator | MethodDecorator | ParameterDecorator;
 /**
  * Legacy definition of a decorated class for compatibility reasons.
  *
@@ -28,4 +20,7 @@ export declare type VueDecoratorFactoryFunction = ClassDecoratorFactoryFunction 
 export declare type DecoratedClass = VueClass<Vue> & {
     __decorators__?: ((options: CompatibleComponentOptions<Vue>) => void)[];
 };
-export declare function createDecorator(factory: (options: CompatibleComponentOptions<Vue>, key: string, index?: number) => void): VueDecorator;
+export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>) => void): ClassDecorator;
+export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol) => void): PropertyDecorator;
+export declare function createDecorator(callback: <T>(options: CompatibleComponentOptions<Vue>, key: string | symbol, descriptor: TypedPropertyDescriptor<T>) => void): MethodDecorator;
+export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol, parameterIndex: number) => void): ParameterDecorator;

@@ -681,8 +681,8 @@ Component.registerHooks = function registerHooks() {
 function mixins(...Constructors) {
   return Constructors[0];
 }
-function createDecorator(factory) {
-  return (target, key, index) => {
+function createDecorator(callback) {
+  return function CreatedVueDecorator(target, key, index) {
     const ConstructorFunc = typeof target === "function" ? target : target.constructor;
     if (!ConstructorFunc.__decorators__) {
       ConstructorFunc.__decorators__ = [];
@@ -690,7 +690,7 @@ function createDecorator(factory) {
     if (typeof index !== "number") {
       index = void 0;
     }
-    ConstructorFunc.__decorators__.push((options) => factory(options, key, index));
+    ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
   };
 }
 export { $internalHookNames, $lifeCycleHookNames, Component, CompositionApi, Vue, VueComponentBaseImpl, createDecorator, Component as default, isInternalHookName, isNotInternalHookName, mixins };
