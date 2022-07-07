@@ -1,24 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * This file is inspired by package "vue-class-component". Its content is taked from there and adapted to the needs
+ * This file is inspired by package "vue-class-component". Its content is taken from there and adapted to the needs
  * of this package.
  *
  * @see: https://github.com/vuejs/vue-class-component/blob/next/src/vue.ts
  */
 
-import type { ComponentOptions } from "vue";
 import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
 
-export type ClassDecorator = (ConstructorFunction: typeof Vue) => void;
-export type PropertyDecorator = (target: Vue, key: string) => void;
-export type ParameterDecorator = (target: Vue, key: string, index: number) => void;
-export type VueDecorator = ClassDecorator | PropertyDecorator | ParameterDecorator;
+/* from lib.es5.d.ts */
 
-export type ClassDecoratorFactoryFunction = (options: ComponentOptions<Vue>, key: string) => void;
-export type PropertyDecoratorFactoryFunction = (options: ComponentOptions<Vue>, key: string) => void;
-export type ParameterDecoratorFactoryFunction =
-    (options: ComponentOptions<Vue>, key: string, index: number) => void;
-export type VueDecoratorFactoryFunction =
-    ClassDecoratorFactoryFunction | PropertyDecoratorFactoryFunction | ParameterDecoratorFactoryFunction;
+export type VueDecorator =
+    | ClassDecorator
+    | PropertyDecorator
+    | MethodDecorator
+    | ParameterDecorator
+;
 
 /**
  * Legacy definition of a decorated class for compatibility reasons.
@@ -37,10 +34,27 @@ export type DecoratedClass = VueClass<Vue> & {
     __decorators__?: ((options: CompatibleComponentOptions<Vue>) => void)[]
 }
 
+export function createDecorator(callback: (options: CompatibleComponentOptions<Vue>) => void): ClassDecorator;
 export function createDecorator(
-    factory: (options: CompatibleComponentOptions<Vue>, key: string, index?: number) => void,
+    callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol) => void,
+): PropertyDecorator;
+export function createDecorator(
+    callback: <T>(
+        options: CompatibleComponentOptions<Vue>, key: string | symbol, descriptor: TypedPropertyDescriptor<T>,
+    ) => void,
+): MethodDecorator;
+export function createDecorator(
+    callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol, parameterIndex: number) => void,
+): ParameterDecorator;
+
+export function createDecorator(
+    callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol, descriptorOrNumber: any) => void,
 ): VueDecorator {
-    return (target: Vue | typeof Vue, key: string, index?: number) => {
+    return function CreatedVueDecorator(
+        target: Vue | typeof Vue,
+        key?: string | symbol,
+        index?: number | TypedPropertyDescriptor<any>,
+    ) {
 
         const ConstructorFunc = typeof target === "function"
             ? target as DecoratedClass
@@ -55,6 +69,6 @@ export function createDecorator(
             index = undefined;
         }
 
-        ConstructorFunc.__decorators__.push((options) => factory(options, key, index));
+        ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
     };
 }
