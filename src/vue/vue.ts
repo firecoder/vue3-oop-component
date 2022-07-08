@@ -31,6 +31,7 @@ import {
     watch,
 } from "vue";
 import { defineNewLinkedProperties } from "../utilities/properties";
+import { addLegacyRenderingFunctions } from "./legacy-render-functions";
 
 export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
 
@@ -110,6 +111,7 @@ export class VueComponentBaseImpl implements VueBase {
         });
 
         defineNewLinkedProperties(this, vueInstance?.props);
+        addLegacyRenderingFunctions(this);
     }
 
     /**
