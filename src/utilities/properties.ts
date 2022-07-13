@@ -1,4 +1,4 @@
-import { isRef, isReactive, reactive, toRaw, unref } from "vue";
+import { isReactive, reactive, toRaw, unref } from "vue";
 
 /**
  * Defines new properties on an instance as "links" to the provided properties object, much like "hard links".
