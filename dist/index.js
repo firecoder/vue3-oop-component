@@ -5,14 +5,19 @@ var __publicField = (obj, key, value) => {
   return value;
 };
 import { toRaw, isReactive, reactive, unref, computed, getCurrentInstance, inject, onActivated, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onDeactivated, onMounted, onRenderTracked, onRenderTriggered, onErrorCaptured, onServerPrefetch, onUnmounted, onUpdated, provide, ref, warn, watch, nextTick } from "vue";
+function toClass(clazz) {
+  if (!(clazz instanceof Function) && clazz instanceof Object) {
+    return clazz.constructor;
+  } else {
+    return clazz;
+  }
+}
 function getAllBaseClasses(clazz) {
   if (!clazz) {
     return [];
   }
   const collectedClasses = [];
-  if (!(clazz instanceof Function) && clazz instanceof Object) {
-    clazz = clazz.constructor;
-  }
+  clazz = toClass(clazz);
   let parentClass = Object.getPrototypeOf(clazz);
   while (parentClass) {
     collectedClasses.push(parentClass);
@@ -47,6 +52,25 @@ function getPropertyFromParentClassDefinition(clazz, property) {
   }
   return void 0;
 }
+function getInstanceMethodsFromClass(clazz) {
+  const allMethods = {};
+  if (!clazz) {
+    return {};
+  }
+  const allClasses = getAllBaseClasses(clazz);
+  allClasses.push(toClass(clazz));
+  allClasses.reverse();
+  for (const parentClass of allClasses) {
+    const parentClassDefinition = parentClass.prototype;
+    [].concat(Object.getOwnPropertyNames(parentClassDefinition)).concat(Object.getOwnPropertySymbols(parentClassDefinition)).forEach((property) => {
+      const method = parentClassDefinition[property];
+      if (!allMethods[property] && typeof method === "function") {
+        allMethods[property] = method;
+      }
+    });
+  }
+  return allMethods;
+}
 function defineNewLinkedProperties(instance, newProperties) {
   if (typeof instance === "undefined" || typeof newProperties === "undefined") {
     return instance;
@@ -67,6 +91,53 @@ function defineNewLinkedProperties(instance, newProperties) {
     });
   }
   return instance;
+}
+function createProxyRedirectReads(writeTarget, readTargetIfMissingInWrite) {
+  const deletedPropertyNames = {};
+  readTargetIfMissingInWrite = readTargetIfMissingInWrite || {};
+  return new Proxy(writeTarget || {}, {
+    get(target, property) {
+      if (!deletedPropertyNames[property] && property in target) {
+        return target[property];
+      } else if (!deletedPropertyNames[property]) {
+        return readTargetIfMissingInWrite[property];
+      } else {
+        return void 0;
+      }
+    },
+    set(target, property, value) {
+      target[property] = value;
+      delete deletedPropertyNames[property];
+      return true;
+    },
+    defineProperty(target, property, attributes) {
+      Object.defineProperty(target, property, attributes);
+      delete deletedPropertyNames[property];
+      return true;
+    },
+    deleteProperty(target, property) {
+      delete target[property];
+      if (property in readTargetIfMissingInWrite) {
+        deletedPropertyNames[property] = true;
+      }
+      return true;
+    },
+    getOwnPropertyDescriptor(target, property) {
+      if (!deletedPropertyNames[property] && Object.hasOwn(target, property)) {
+        return Object.getOwnPropertyDescriptor(target, property);
+      } else if (!deletedPropertyNames[property] && Object.hasOwn(readTargetIfMissingInWrite, property)) {
+        return Object.getOwnPropertyDescriptor(readTargetIfMissingInWrite, property);
+      } else {
+        return void 0;
+      }
+    },
+    has(target, property) {
+      return !deletedPropertyNames[property] && (typeof property === "string" && Object.hasOwn(target, property) || readTargetIfMissingInWrite && Object.hasOwn(readTargetIfMissingInWrite, property));
+    },
+    ownKeys(target) {
+      return Object.keys(target).concat(Object.keys(readTargetIfMissingInWrite || {})).filter((property) => !deletedPropertyNames[property]);
+    }
+  });
 }
 function generateMultiFunctionWrapper(...wrappedFunctions) {
   wrappedFunctions = (wrappedFunctions || []).filter((func) => func && typeof func === "function");
@@ -102,6 +173,48 @@ const CompositionApi = {
   warn,
   watch
 };
+function getFunctionFromCompatOrThrowError(vue, name) {
+  var _a;
+  const legayFunctions = (_a = vue.$) == null ? void 0 : _a.proxy;
+  if (typeof legayFunctions[name] === "function") {
+    return legayFunctions[name];
+  }
+  throw new Error("Legacy function is not available with this Vue 3 build. Use @vue/compat instead!");
+}
+function addLegacyRenderingFunctions(vue) {
+  const target = vue;
+  [
+    "$createElement",
+    "_c",
+    "_o",
+    "_n",
+    "_s",
+    "_l",
+    "_t",
+    "_q",
+    "_i",
+    "_m",
+    "_f",
+    "_k",
+    "_b",
+    "_v",
+    "_e",
+    "_u",
+    "_g",
+    "_d",
+    "_p"
+  ].forEach((name) => Object.defineProperty(target, name, {
+    get: function() {
+      return getFunctionFromCompatOrThrowError(this, name);
+    },
+    enumerable: false,
+    configurable: true
+  }));
+  return target;
+}
+function MixinCustomRender(componentClass) {
+  return componentClass;
+}
 class VueComponentBaseImpl {
   constructor() {
     __publicField(this, "$");
@@ -115,6 +228,7 @@ class VueComponentBaseImpl {
       configurable: true
     });
     defineNewLinkedProperties(this, vueInstance == null ? void 0 : vueInstance.props);
+    addLegacyRenderingFunctions(this);
   }
   get $el() {
     var _a, _b;
@@ -509,7 +623,11 @@ function componentFactory(component, options = {}) {
   options.computed = Object.assign({}, computedProperties, options.computed);
   const decorators = component.__decorators__;
   if (decorators && decorators.length > 0) {
+    const originalMethods = options.methods || {};
+    const classMethods = getInstanceMethodsFromClass(component);
+    options.methods = createProxyRedirectReads(originalMethods, classMethods);
     decorators.forEach((decoratorFunction) => decoratorFunction(options));
+    options.methods = originalMethods;
   }
   applyMethodsFromOptions(component, options);
   const classComponent = component;
@@ -693,4 +811,4 @@ function createDecorator(callback) {
     ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
   };
 }
-export { $internalHookNames, $lifeCycleHookNames, Component, CompositionApi, Vue, VueComponentBaseImpl, createDecorator, Component as default, isInternalHookName, isNotInternalHookName, mixins };
+export { $internalHookNames, $lifeCycleHookNames, Component, CompositionApi, MixinCustomRender, Vue, VueComponentBaseImpl, addLegacyRenderingFunctions, createDecorator, Component as default, isInternalHookName, isNotInternalHookName, mixins };

@@ -11,3 +11,10 @@
  * @param newProperties a reactive object providing all the properties to define and link to.
  */
 export declare function defineNewLinkedProperties<T extends object>(instance: T, newProperties?: Record<string | symbol, unknown>): T;
+/**
+ * Create a proxy to redirect reads to alternative object if property is missing in target.
+ *
+ * @param writeTarget write all new properties to this target
+ * @param readTargetIfMissingInWrite read all missing properties from here
+ */
+export declare function createProxyRedirectReads<T extends Record<string | symbol, unknown>>(writeTarget: Record<string | symbol, unknown>, readTargetIfMissingInWrite: Record<string | symbol, unknown>): Record<string | symbol, unknown>;
