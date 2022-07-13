@@ -8,6 +8,7 @@ import type {
     VNode,
     VNodeArrayChildren,
 } from "vue";
+import type { VueClass }  from "./vue";
 
 export type LegacyVNodeChildren =
     | string
@@ -239,4 +240,14 @@ export function addLegacyRenderingFunctions<V>(vue: V): V & VueLegacyRenderFunct
     ));
 
     return target;
+}
+
+/**
+ * Makes legacy render functions visible to child classes.
+ *
+ * @param componentClass
+ * @constructor
+ */
+export function MixinCustomRender<A>(componentClass: VueClass<A>): VueClass<A> & VueLegacyRenderFunctions {
+    return componentClass as VueClass<A> & VueLegacyRenderFunctions;
 }
