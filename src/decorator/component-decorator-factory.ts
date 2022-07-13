@@ -11,6 +11,7 @@ import type {
 } from "vue";
 import type {
     CompatibleComponentOptions,
+    DefaultMethods,
     DefaultProps,
     PropsDefinition,
     RecordPropsDefinition,
@@ -24,8 +25,8 @@ import type {
 } from "./component-decorator-types";
 
 import { getCurrentInstance } from "vue";
-import { getPropertyFromParentClassDefinition } from "../utilities/traverse-prototype";
-import { defineNewLinkedProperties } from "../utilities/properties";
+import { getInstanceMethodsFromClass, getPropertyFromParentClassDefinition } from "../utilities/traverse-prototype";
+import { createProxyRedirectReads, defineNewLinkedProperties } from "../utilities/properties";
 import { generateMultiFunctionWrapper } from "../utilities/wrappers";
 import { $internalHookNames } from "./life-cycle-hooks";
 import { ComponentBuilderImpl } from "./ComponentBuilderImpl";
@@ -64,7 +65,15 @@ export function componentFactory<V extends Vue = Vue>(
     // read all the options from the decorators
     const decorators = (component as DecoratedClass).__decorators__;
     if (decorators && decorators.length > 0) {
+        // some decorators, like vue-debounce-decorator need access to the component methods, to replace them.
+        const originalMethods = options.methods || {};
+        const classMethods = getInstanceMethodsFromClass(component);
+        options.methods = createProxyRedirectReads(originalMethods, classMethods) as DefaultMethods<V>;
+
+        // call all decorators now
         decorators.forEach((decoratorFunction) => decoratorFunction(options));
+
+        options.methods = originalMethods;
     }
 
     // applying methods to the class itself makes them inheritable to child classes.
@@ -107,6 +116,7 @@ export function componentFactory<V extends Vue = Vue>(
 
     return classComponent;
 }
+
 
 /**
  * Create the Vue class component options onto the provided component and returns the patched one.
