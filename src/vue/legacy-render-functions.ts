@@ -235,7 +235,6 @@ export function addLegacyRenderingFunctions<V>(vue: V): V & VueLegacyRenderFunct
             },
             enumerable: false,
             configurable: true,
-            writable: false,
         },
     ));
 
