@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { collectStaticFunctionFromPrototypeChain } from "../../src/utilities/traverse-prototype";
+import {
+    collectStaticFunctionFromPrototypeChain,
+    getInstanceMethodsFromClass,
+} from "../../src/utilities/traverse-prototype";
 
 
 describe("collectFunctionFromPrototypeChain(): Test collecting functions from prototype chain", () => {
@@ -161,5 +164,36 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
         expect(collectedFunctions.length).toEqual(2);
         expect(collectedFunctions[0]()).toEqual("test1");
         expect(collectedFunctions[1]()).toEqual("test2a");
+    });
+
+    it("Collect instance method from single class", () => {
+        class SimpleClass {
+            method1() { return "test1"; }
+            method2() { return "test2"; }
+        }
+
+        const collectedFunctions = getInstanceMethodsFromClass(SimpleClass);
+        expect(Object.getOwnPropertyNames(collectedFunctions).length).toEqual(2);
+        expect(collectedFunctions.method1()).toEqual("test1");
+        expect(collectedFunctions.method2()).toEqual("test2");
+    });
+
+
+    it("Collect instance method from class with parent", () => {
+        class ParentClass {
+            method1() { return "parent: method 1"; }
+            method3() { return "parent: method 3"; }
+        }
+
+        class SimpleClass extends ParentClass {
+            method1() { return super.method1() + "; child: method 1"; }
+            method2() { return "child: method 2"; }
+        }
+
+        const collectedFunctions = getInstanceMethodsFromClass(SimpleClass);
+        expect(Object.getOwnPropertyNames(collectedFunctions).length).toEqual(3);
+        expect(collectedFunctions.method1()).toEqual("parent: method 1; child: method 1");
+        expect(collectedFunctions.method2()).toEqual("child: method 2");
+        expect(collectedFunctions.method3()).toEqual("parent: method 3");
     });
 });

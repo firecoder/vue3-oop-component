@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export type AnyFunction = (...args: any[]) => any;
 
 export type AnyInstance<T = any> = Record<string | symbol, T>;
@@ -9,6 +10,14 @@ export interface AnyClass<T = any> {
     [prop: string | symbol]: unknown;
 }
 
+export function toClass<C>(clazz: AnyClass<C> | AnyInstance<C>): AnyClass<C> {
+    // if "clazz" is an instance, then get the class definition of it
+    if (!(clazz instanceof Function) && clazz instanceof Object) {
+        return clazz.constructor as unknown as AnyClass<C>;
+    } else {
+        return clazz;
+    }
+}
 
 /**
  * Returns a list of all base classes of the provided class.
@@ -25,9 +34,7 @@ export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>
     const collectedClasses: AnyClass<T>[] = [ ];
 
     // if "clazz" is an instance, then get the class definition of it
-    if (!(clazz instanceof Function) && clazz instanceof Object) {
-        clazz = clazz.constructor as unknown as AnyClass<T>;
-    }
+    clazz = toClass(clazz);
 
     let parentClass = Object.getPrototypeOf(clazz);
     while (parentClass) {
@@ -124,4 +131,43 @@ export function getPropertyFromParentClassDefinition<T>(
     }
 
     return undefined;
+}
+
+
+/**
+ * Get all functions from the class.
+ *
+ * <p>
+ *     Reads all properties of this class and all the base classes and returns all functions. For a method, only
+ *     the child function is returned, if the child overwrites the method of the same name.
+ * </p>
+ *
+ * @param clazz the check and its parents .
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function getInstanceMethodsFromClass(clazz: AnyClass | AnyInstance): Record<string | symbol, Function> {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    const allMethods = {} as Record<string | symbol, Function>;
+    if (!clazz) {
+        return {};
+    }
+
+    const allClasses = getAllBaseClasses(clazz);
+    allClasses.push(toClass(clazz));
+    allClasses.reverse(); // because list starts with top class, not with immediate parent
+
+    for (const parentClass of allClasses) {
+        const parentClassDefinition = parentClass.prototype as Record<string | symbol, unknown>;
+        ([] as (string | symbol)[])
+            .concat(Object.getOwnPropertyNames(parentClassDefinition))
+            .concat(Object.getOwnPropertySymbols(parentClassDefinition))
+            .forEach((property) => {
+                const method = parentClassDefinition[property];
+                if (!allMethods[property] && typeof method === "function") {
+                    allMethods[property] = method;
+                }
+            });
+    }
+
+    return allMethods;
 }
