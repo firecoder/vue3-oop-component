@@ -66,6 +66,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nros/vue3-typescript-compatibility"
+    "url": "https://github.com/nexxar/vue3-typescript-compatibility"
   }
 }
