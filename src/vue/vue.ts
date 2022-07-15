@@ -40,20 +40,20 @@ export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomPr
 
 export interface ClassComponentHooks {
     // To be extended on user land
-    data?(): object
-    beforeCreate?(): void
-    created?(): void
-    beforeMount?(): void
-    mounted?(): void
-    beforeUnmount?(): void
-    unmounted?(): void
-    beforeUpdate?(): void
-    updated?(): void
-    activated?(): void
-    deactivated?(): void
+    data?(): object;
+    beforeCreate?(): void;
+    created?(): void;
+    beforeMount?(): void;
+    mounted?(): void;
+    beforeUnmount?(): void;
+    unmounted?(): void;
+    beforeUpdate?(): void;
+    updated?(): void;
+    activated?(): void;
+    deactivated?(): void;
     render?(createElement: typeof h, ctx: SetupContext): VNode | void;
-    errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined
-    serverPrefetch?(): Promise<unknown>
+    errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined;
+    serverPrefetch?(): Promise<unknown>;
 }
 
 export interface CustomClassImplementation {
