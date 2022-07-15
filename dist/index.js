@@ -1,39 +1,43 @@
-var D = Object.defineProperty;
-var V = (r, e, t) => e in r ? D(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
-var l = (r, e, t) => (V(r, typeof e != "symbol" ? e + "" : e, t), t);
-import { computed as I, getCurrentInstance as O, h as S, inject as N, onActivated as W, onBeforeMount as x, onBeforeUnmount as T, onBeforeUpdate as U, onDeactivated as R, onMounted as H, onRenderTracked as B, onRenderTriggered as L, onErrorCaptured as M, onServerPrefetch as G, onUnmounted as K, onUpdated as q, provide as J, ref as Q, warn as X, watch as y, toRaw as m, isReactive as Y, reactive as v, unref as Z, nextTick as z } from "vue";
-const a = {
-  computed: I,
-  getCurrentInstance: O,
-  h: S,
-  inject: N,
-  onActivated: W,
-  onBeforeMount: x,
-  onBeforeUnmount: T,
-  onBeforeUpdate: U,
-  onDeactivated: R,
-  onMounted: H,
-  onRenderTracked: B,
-  onRenderTriggered: L,
-  onErrorCaptured: M,
-  onServerPrefetch: G,
-  onUnmounted: K,
-  onUpdated: q,
-  provide: J,
-  ref: Q,
-  warn: X,
-  watch: y
+var __defProp = Object.defineProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __publicField = (obj, key, value) => {
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  return value;
 };
-function ee(r, e) {
-  var n;
-  const t = (n = r.$) == null ? void 0 : n.proxy;
-  if (typeof t[e] == "function")
-    return t[e];
+import { computed, getCurrentInstance, h, inject, onActivated, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onDeactivated, onMounted, onRenderTracked, onRenderTriggered, onErrorCaptured, onServerPrefetch, onUnmounted, onUpdated, provide, ref, warn, watch, toRaw, isReactive, reactive, unref, nextTick } from "vue";
+const CompositionApi = {
+  computed,
+  getCurrentInstance,
+  h,
+  inject,
+  onActivated,
+  onBeforeMount,
+  onBeforeUnmount,
+  onBeforeUpdate,
+  onDeactivated,
+  onMounted,
+  onRenderTracked,
+  onRenderTriggered,
+  onErrorCaptured,
+  onServerPrefetch,
+  onUnmounted,
+  onUpdated,
+  provide,
+  ref,
+  warn,
+  watch
+};
+function getFunctionFromCompatOrThrowError(vue, name) {
+  var _a;
+  const legayFunctions = (_a = vue.$) == null ? void 0 : _a.proxy;
+  if (typeof legayFunctions[name] === "function") {
+    return legayFunctions[name];
+  }
   throw new Error("Legacy function is not available with this Vue 3 build. Use @vue/compat instead!");
 }
-function te(r) {
-  const e = r;
-  return [
+function addLegacyRenderingFunctions(vue) {
+  const target = vue;
+  [
     "$createElement",
     "_c",
     "_o",
@@ -53,146 +57,181 @@ function te(r) {
     "_g",
     "_d",
     "_p"
-  ].forEach((t) => Object.defineProperty(e, t, {
+  ].forEach((name) => Object.defineProperty(target, name, {
     get: function() {
-      return ee(this, t);
+      return getFunctionFromCompatOrThrowError(this, name);
     },
-    enumerable: !1,
-    configurable: !0
-  })), e;
+    enumerable: false,
+    configurable: true
+  }));
+  return target;
 }
-function je(r) {
-  return r;
+function MixinCustomRender(componentClass) {
+  return componentClass;
 }
-function j(r, e) {
-  if (typeof r > "u" || typeof e > "u")
-    return r;
-  const t = m(r), n = Y(e) ? e : v(e);
-  return e && typeof e == "object" && [].concat(Object.keys(e)).concat(Object.getOwnPropertySymbols(e)).forEach((o) => {
-    Object.defineProperty(t, o, {
-      get() {
-        return Z(n[o]);
-      },
-      set() {
-      },
-      configurable: !0,
-      enumerable: !0
+function defineNewLinkedProperties(instance, newProperties) {
+  if (typeof instance === "undefined" || typeof newProperties === "undefined") {
+    return instance;
+  }
+  const rawInstance = toRaw(instance);
+  const reactiveSource = isReactive(newProperties) ? newProperties : reactive(newProperties);
+  if (newProperties && typeof newProperties === "object") {
+    [].concat(Object.keys(newProperties)).concat(Object.getOwnPropertySymbols(newProperties)).forEach((key) => {
+      Object.defineProperty(rawInstance, key, {
+        get() {
+          return unref(reactiveSource[key]);
+        },
+        set() {
+        },
+        configurable: true,
+        enumerable: true
+      });
     });
-  }), r;
+  }
+  return instance;
 }
-function re(r, e) {
-  const t = {};
-  return e = e || {}, new Proxy(r || {}, {
-    get(n, o) {
-      return !t[o] && o in n ? n[o] : t[o] ? void 0 : e[o];
+function createProxyRedirectReads(writeTarget, readTargetIfMissingInWrite) {
+  const deletedPropertyNames = {};
+  readTargetIfMissingInWrite = readTargetIfMissingInWrite || {};
+  return new Proxy(writeTarget || {}, {
+    get(target, property) {
+      if (!deletedPropertyNames[property] && property in target) {
+        return target[property];
+      } else if (!deletedPropertyNames[property]) {
+        return readTargetIfMissingInWrite[property];
+      } else {
+        return void 0;
+      }
     },
-    set(n, o, i) {
-      return n[o] = i, delete t[o], !0;
+    set(target, property, value) {
+      target[property] = value;
+      delete deletedPropertyNames[property];
+      return true;
     },
-    defineProperty(n, o, i) {
-      return Object.defineProperty(n, o, i), delete t[o], !0;
+    defineProperty(target, property, attributes) {
+      Object.defineProperty(target, property, attributes);
+      delete deletedPropertyNames[property];
+      return true;
     },
-    deleteProperty(n, o) {
-      return delete n[o], o in e && (t[o] = !0), !0;
+    deleteProperty(target, property) {
+      delete target[property];
+      if (property in readTargetIfMissingInWrite) {
+        deletedPropertyNames[property] = true;
+      }
+      return true;
     },
-    getOwnPropertyDescriptor(n, o) {
-      return !t[o] && Object.hasOwn(n, o) ? Object.getOwnPropertyDescriptor(n, o) : !t[o] && Object.hasOwn(e, o) ? Object.getOwnPropertyDescriptor(e, o) : void 0;
+    getOwnPropertyDescriptor(target, property) {
+      if (!deletedPropertyNames[property] && Object.hasOwn(target, property)) {
+        return Object.getOwnPropertyDescriptor(target, property);
+      } else if (!deletedPropertyNames[property] && Object.hasOwn(readTargetIfMissingInWrite, property)) {
+        return Object.getOwnPropertyDescriptor(readTargetIfMissingInWrite, property);
+      } else {
+        return void 0;
+      }
     },
-    has(n, o) {
-      return !t[o] && (typeof o == "string" && Object.hasOwn(n, o) || e && Object.hasOwn(e, o));
+    has(target, property) {
+      return !deletedPropertyNames[property] && (typeof property === "string" && Object.hasOwn(target, property) || readTargetIfMissingInWrite && Object.hasOwn(readTargetIfMissingInWrite, property));
     },
-    ownKeys(n) {
-      return Object.keys(n).concat(Object.keys(e || {})).filter((o) => !t[o]);
+    ownKeys(target) {
+      return Object.keys(target).concat(Object.keys(readTargetIfMissingInWrite || {})).filter((property) => !deletedPropertyNames[property]);
     }
   });
 }
-let P;
-function ne() {
-  return P;
+let currentSetupContext = void 0;
+function getCurrentSetupContext() {
+  return currentSetupContext;
 }
-function $(r) {
-  P = r;
+function setCurrentSetupContext(newContext) {
+  currentSetupContext = newContext;
 }
-function oe() {
-  $(void 0);
+function clearCurrentSetupContext() {
+  setCurrentSetupContext(void 0);
 }
-class ie {
+class VueComponentBaseImpl {
   constructor() {
-    l(this, "$");
-    l(this, "_setupContext");
-    let e = O(), t = ne();
+    __publicField(this, "$");
+    __publicField(this, "_setupContext");
+    let vueInstance = getCurrentInstance();
+    let setupContext = getCurrentSetupContext();
     Object.defineProperty(this, "$", {
-      get: () => e,
-      set: (n) => {
-        e = n;
+      get: () => vueInstance,
+      set: (newValue) => {
+        vueInstance = newValue;
       },
-      enumerable: !1,
-      configurable: !0
-    }), Object.defineProperty(this, "_setupContext", {
-      get: () => t,
-      set: (n) => {
-        t = n;
+      enumerable: false,
+      configurable: true
+    });
+    Object.defineProperty(this, "_setupContext", {
+      get: () => setupContext,
+      set: (newValue) => {
+        setupContext = newValue;
       },
-      enumerable: !1,
-      configurable: !0
-    }), j(this, e == null ? void 0 : e.props), te(this);
+      enumerable: false,
+      configurable: true
+    });
+    defineNewLinkedProperties(this, vueInstance == null ? void 0 : vueInstance.props);
+    addLegacyRenderingFunctions(this);
   }
   getSetupContext() {
     return this._setupContext;
   }
   get $el() {
-    var e, t;
-    return (t = (e = this.$) == null ? void 0 : e.vnode) == null ? void 0 : t.el;
+    var _a, _b;
+    return (_b = (_a = this.$) == null ? void 0 : _a.vnode) == null ? void 0 : _b.el;
   }
   get $attrs() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.attrs;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.attrs;
   }
   get $data() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.data;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.data;
   }
   get $emit() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.emit;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.emit;
   }
   get $forceUpdate() {
-    var e;
-    return ((e = this.$) == null ? void 0 : e.f) || (() => this.$nextTick(() => {
-      var t;
-      return (t = this.$) == null ? void 0 : t.update();
+    var _a;
+    return ((_a = this.$) == null ? void 0 : _a.f) || (() => this.$nextTick(() => {
+      var _a2;
+      return (_a2 = this.$) == null ? void 0 : _a2.update();
     }));
   }
   get $nextTick() {
-    var e, t;
-    return ((e = this.$) == null ? void 0 : e.n) || z.bind((t = this.$) == null ? void 0 : t.proxy);
+    var _a, _b;
+    return ((_a = this.$) == null ? void 0 : _a.n) || nextTick.bind((_b = this.$) == null ? void 0 : _b.proxy);
   }
   get $parent() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.parent;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.parent;
   }
   get $props() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.props;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.props;
   }
   get $options() {
-    var e;
-    return ((e = this.$) == null ? void 0 : e.type) || {};
+    var _a;
+    return ((_a = this.$) == null ? void 0 : _a.type) || {};
   }
   get $refs() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.refs;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.refs;
   }
   get $root() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.root;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.root;
   }
   get $slots() {
-    var e;
-    return (e = this.$) == null ? void 0 : e.slots;
+    var _a;
+    return (_a = this.$) == null ? void 0 : _a.slots;
   }
-  $watch(e, t, n) {
-    return typeof e == "string" ? y(() => this[e], t, n) : y(e, t, n);
+  $watch(source, cb, options) {
+    if (typeof source === "string") {
+      return watch(() => this[source], cb, options);
+    } else {
+      return watch(source, cb, options);
+    }
   }
   setup() {
   }
@@ -200,154 +239,190 @@ class ie {
     return [];
   }
 }
-const Pe = ie;
-function A(r) {
-  return !(r instanceof Function) && r instanceof Object ? r.constructor : r;
-}
-function g(r) {
-  if (!r)
-    return [];
-  const e = [];
-  r = A(r);
-  let t = Object.getPrototypeOf(r);
-  for (; t; )
-    e.push(t), t = Object.getPrototypeOf(t);
-  return e.pop(), e.pop(), e.reverse(), e;
-}
-function ce(r, e) {
-  if (!r || !e)
-    return [];
-  const t = (g(r) || []).filter((n) => Object.hasOwn(n, e)).map((n) => n[e]);
-  return Object.hasOwn(r, e) && t.push(r[e]), t;
-}
-function se(r, e) {
-  if (!r)
-    return;
-  const t = g(r);
-  t.reverse();
-  for (const n of t) {
-    const o = n.prototype;
-    if (o && Object.hasOwn(o, e))
-      return o[e];
+const Vue = VueComponentBaseImpl;
+function toClass(clazz) {
+  if (!(clazz instanceof Function) && clazz instanceof Object) {
+    return clazz.constructor;
+  } else {
+    return clazz;
   }
 }
-function ae(r) {
-  const e = {};
-  if (!r)
+function getAllBaseClasses(clazz) {
+  if (!clazz) {
+    return [];
+  }
+  const collectedClasses = [];
+  clazz = toClass(clazz);
+  let parentClass = Object.getPrototypeOf(clazz);
+  while (parentClass) {
+    collectedClasses.push(parentClass);
+    parentClass = Object.getPrototypeOf(parentClass);
+  }
+  collectedClasses.pop();
+  collectedClasses.pop();
+  collectedClasses.reverse();
+  return collectedClasses;
+}
+function collectStaticPropertyFromPrototypeChain(clazz, property) {
+  if (!clazz || !property) {
+    return [];
+  }
+  const collectedProperties = (getAllBaseClasses(clazz) || []).filter((parentClass) => Object.hasOwn(parentClass, property)).map((parentClass) => parentClass[property]);
+  if (Object.hasOwn(clazz, property)) {
+    collectedProperties.push(clazz[property]);
+  }
+  return collectedProperties;
+}
+function getPropertyFromParentClassDefinition(clazz, property) {
+  if (!clazz) {
+    return void 0;
+  }
+  const allParentClasses = getAllBaseClasses(clazz);
+  allParentClasses.reverse();
+  for (const parentClass of allParentClasses) {
+    const parentClassDefinition = parentClass.prototype;
+    if (parentClassDefinition && Object.hasOwn(parentClassDefinition, property)) {
+      return parentClassDefinition[property];
+    }
+  }
+  return void 0;
+}
+function getInstanceMethodsFromClass(clazz) {
+  const allMethods = {};
+  if (!clazz) {
     return {};
-  const t = g(r);
-  t.push(A(r)), t.reverse();
-  for (const n of t) {
-    const o = n.prototype;
-    [].concat(Object.getOwnPropertyNames(o)).concat(Object.getOwnPropertySymbols(o)).forEach((i) => {
-      const s = o[i];
-      !e[i] && typeof s == "function" && (e[i] = s);
+  }
+  const allClasses = getAllBaseClasses(clazz);
+  allClasses.push(toClass(clazz));
+  allClasses.reverse();
+  for (const parentClass of allClasses) {
+    const parentClassDefinition = parentClass.prototype;
+    [].concat(Object.getOwnPropertyNames(parentClassDefinition)).concat(Object.getOwnPropertySymbols(parentClassDefinition)).forEach((property) => {
+      const method = parentClassDefinition[property];
+      if (!allMethods[property] && typeof method === "function") {
+        allMethods[property] = method;
+      }
     });
   }
-  return e;
+  return allMethods;
 }
-function fe(...r) {
-  return r = (r || []).filter((e) => e && typeof e == "function"), function(...t) {
-    let n;
-    if (Array.isArray(r) && r.length > 0) {
-      n = r[0].apply(this, t);
-      for (let o = 1; o < r.length; o++)
-        r[o].apply(this, t);
+function generateMultiFunctionWrapper(...wrappedFunctions) {
+  wrappedFunctions = (wrappedFunctions || []).filter((func) => func && typeof func === "function");
+  return function callAllWrappedFunctions(...args) {
+    let returnValue;
+    if (Array.isArray(wrappedFunctions) && wrappedFunctions.length > 0) {
+      returnValue = wrappedFunctions[0].apply(this, args);
+      for (let i = 1; i < wrappedFunctions.length; i++) {
+        wrappedFunctions[i].apply(this, args);
+      }
     }
-    return n;
+    return returnValue;
   };
 }
-const b = {
-  beforeCreate: () => {
+const $lifeCycleHookRegisterFunctions = {
+  beforeCreate: () => void 0,
+  created: () => void 0,
+  beforeMount: function beforeMount(hook, target) {
+    return CompositionApi.onBeforeMount(hook, target);
   },
-  created: () => {
+  mounted: function mounted(hook, target) {
+    return CompositionApi.onMounted(hook, target);
   },
-  beforeMount: function(e, t) {
-    return a.onBeforeMount(e, t);
+  beforeDestroy: function beforeDestroy(hook, target) {
+    return CompositionApi.onBeforeUnmount(hook, target);
   },
-  mounted: function(e, t) {
-    return a.onMounted(e, t);
+  beforeUnMount: function beforeUnMount(hook, target) {
+    return CompositionApi.onBeforeUnmount(hook, target);
   },
-  beforeDestroy: function(e, t) {
-    return a.onBeforeUnmount(e, t);
+  destroyed: function destroyed(hook, target) {
+    return CompositionApi.onUnmounted(hook, target);
   },
-  beforeUnMount: function(e, t) {
-    return a.onBeforeUnmount(e, t);
+  unmounted: function unmounted(hook, target) {
+    return CompositionApi.onUnmounted(hook, target);
   },
-  destroyed: function(e, t) {
-    return a.onUnmounted(e, t);
+  beforeUpdate: function beforeUpdate(hook, target) {
+    return CompositionApi.onBeforeUpdate(hook, target);
   },
-  unmounted: function(e, t) {
-    return a.onUnmounted(e, t);
+  updated: function updated(hook, target) {
+    return CompositionApi.onUpdated(hook, target);
   },
-  beforeUpdate: function(e, t) {
-    return a.onBeforeUpdate(e, t);
+  activated: function activated(hook, target) {
+    return CompositionApi.onActivated(hook, target);
   },
-  updated: function(e, t) {
-    return a.onUpdated(e, t);
+  deactivated: function deactivated(hook, target) {
+    return CompositionApi.onDeactivated(hook, target);
   },
-  activated: function(e, t) {
-    return a.onActivated(e, t);
+  renderTracked: function render(hook, target) {
+    return CompositionApi.onRenderTracked(hook, target);
   },
-  deactivated: function(e, t) {
-    return a.onDeactivated(e, t);
+  renderTriggered: function render2(hook, target) {
+    return CompositionApi.onRenderTriggered(hook, target);
   },
-  renderTracked: function(e, t) {
-    return a.onRenderTracked(e, t);
+  errorCaptured: function errorCaptured(hook, target) {
+    return CompositionApi.onErrorCaptured(hook, target);
   },
-  renderTriggered: function(e, t) {
-    return a.onRenderTriggered(e, t);
-  },
-  errorCaptured: function(e, t) {
-    return a.onErrorCaptured(e, t);
-  },
-  serverPrefetch: function(e, t) {
-    return a.onServerPrefetch(e, t);
+  serverPrefetch: function serverPrefetch(hook, target) {
+    return CompositionApi.onServerPrefetch(hook, target);
   }
-}, ue = Object.getOwnPropertyNames(b), E = [
-  ...ue,
+};
+const $lifeCycleHookNames = Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions);
+const $internalHookNames = [
+  ...$lifeCycleHookNames,
   "data",
   "render"
 ];
-function h(r) {
-  return !le(r);
+function isNotInternalHookName(name) {
+  return !isInternalHookName(name);
 }
-function le(r) {
-  return !!(r && typeof r == "string" && E.indexOf(r) >= 0);
+function isInternalHookName(name) {
+  return !!(name && typeof name === "string" && $internalHookNames.indexOf(name) >= 0);
 }
-function pe(r) {
-  return function() {
-    return r.value;
+function createReferenceGetterFunc(reference) {
+  return function getValueFromReference() {
+    return reference.value;
   };
 }
-function he(r) {
-  return function(t) {
-    r.value = t;
+function createReferenceSetterFunc(reference) {
+  return function setValueToReference(newValue) {
+    reference.value = newValue;
   };
 }
-class C {
-  constructor(e) {
-    l(this, "_component");
-    l(this, "_hasBeenFinalised", !1);
-    l(this, "_rawInstance");
-    l(this, "_reactiveWrapper");
-    l(this, "_watchersToCreate", []);
-    typeof e == "function" ? this.setComponentClass(e) : typeof e == "object" && (this.setComponentClass(e.constructor), this.instance = e);
+class ComponentBuilderImpl {
+  constructor(instanceOrClass) {
+    __publicField(this, "_component");
+    __publicField(this, "_hasBeenFinalised", false);
+    __publicField(this, "_rawInstance");
+    __publicField(this, "_reactiveWrapper");
+    __publicField(this, "_watchersToCreate", []);
+    if (typeof instanceOrClass === "function") {
+      this.setComponentClass(instanceOrClass);
+    } else if (typeof instanceOrClass === "object") {
+      this.setComponentClass(instanceOrClass.constructor);
+      this.instance = instanceOrClass;
+    }
   }
   createAndUseNewInstance() {
-    if (typeof this._component != "function")
+    if (typeof this._component !== "function") {
       throw new Error("Failed to create new component! No class for the component has been provided.");
-    return this.instance = new this._component(), this;
+    }
+    this.instance = new this._component();
+    return this;
   }
   get componentClass() {
-    var e;
-    return this._component || ((e = this.rawInstance) == null ? void 0 : e.constructor);
+    var _a;
+    return this._component || ((_a = this.rawInstance) == null ? void 0 : _a.constructor);
   }
   get instance() {
     return this.reactiveWrapper;
   }
-  set instance(e) {
-    typeof e == "object" ? (this._rawInstance = m(e), this._reactiveWrapper = v(this._rawInstance)) : (this._rawInstance = void 0, this._reactiveWrapper = void 0);
+  set instance(newInstance) {
+    if (typeof newInstance === "object") {
+      this._rawInstance = toRaw(newInstance);
+      this._reactiveWrapper = reactive(this._rawInstance);
+    } else {
+      this._rawInstance = void 0;
+      this._reactiveWrapper = void 0;
+    }
   }
   get rawInstance() {
     return this._rawInstance;
@@ -356,288 +431,432 @@ class C {
     return this._reactiveWrapper;
   }
   build() {
-    return this._checkValidInstanceAndThrowError(), this._hasBeenFinalised && a.warn(`ComponentBuilder's "build()" function has already been called!
-                Calling a second time risks errors with watchers!`), this._hasBeenFinalised = !0, this._createAllWatchers(), this.reactiveWrapper;
+    this._checkValidInstanceAndThrowError();
+    if (this._hasBeenFinalised) {
+      CompositionApi.warn(`ComponentBuilder's "build()" function has already been called!
+                Calling a second time risks errors with watchers!`);
+    }
+    this._hasBeenFinalised = true;
+    this._createAllWatchers();
+    return this.reactiveWrapper;
   }
-  applyDataValues(e) {
-    if (this._checkValidInstanceAndThrowError(), e) {
-      let t = {};
-      typeof e == "function" ? t = e.call(this.reactiveWrapper) : typeof e == "object" && (t = e), t && typeof t == "object" && Object.getOwnPropertyNames(t).forEach((n) => Object.defineProperty(this.rawInstance, n, { value: t[n] }));
+  applyDataValues(dataValues) {
+    this._checkValidInstanceAndThrowError();
+    if (dataValues) {
+      let data = {};
+      if (typeof dataValues === "function") {
+        data = dataValues.call(this.reactiveWrapper);
+      } else if (typeof dataValues === "object") {
+        data = dataValues;
+      }
+      if (data && typeof data === "object") {
+        Object.getOwnPropertyNames(data).forEach((key) => Object.defineProperty(this.rawInstance, key, { value: data[key] }));
+      }
     }
     return this;
   }
-  createComputedValues(e) {
-    return this._checkValidInstanceAndThrowError(), e ? (Object.getOwnPropertyNames(e || {}).filter(h).forEach((t) => {
-      const n = e[t];
-      if (typeof n == "function")
-        this._defineReactiveProperty(t, a.computed(n.bind(this.reactiveWrapper)), !1);
-      else if (n && typeof n == "object" && typeof n.get == "function" && typeof n.set == "function")
-        this._defineReactiveProperty(t, a.computed({
-          get: n.get.bind(this.reactiveWrapper),
-          set: n.set.bind(this.reactiveWrapper)
-        }), !0);
-      else {
-        const o = JSON.stringify(n, void 0, 4);
-        a.warn(`Invalid "computed" specification for property ${t}: ${o}`);
+  createComputedValues(computedValues) {
+    this._checkValidInstanceAndThrowError();
+    if (!computedValues) {
+      return this;
+    }
+    Object.getOwnPropertyNames(computedValues || {}).filter(isNotInternalHookName).forEach((key) => {
+      const computedSpec = computedValues[key];
+      if (typeof computedSpec === "function") {
+        this._defineReactiveProperty(key, CompositionApi.computed(computedSpec.bind(this.reactiveWrapper)), false);
+      } else if (computedSpec && typeof computedSpec === "object" && typeof computedSpec.get === "function" && typeof computedSpec.set === "function") {
+        this._defineReactiveProperty(key, CompositionApi.computed({
+          get: computedSpec.get.bind(this.reactiveWrapper),
+          set: computedSpec.set.bind(this.reactiveWrapper)
+        }), true);
+      } else {
+        const jsonDebug = JSON.stringify(computedSpec, void 0, 4);
+        CompositionApi.warn(`Invalid "computed" specification for property ${key}: ${jsonDebug}`);
       }
-    }), this) : this;
+    });
+    return this;
   }
   getOptionsForComponent() {
-    let e = (this._component && ce(this._component, "__vccOpts") || []).map((t) => t.__component_decorator_original_options).filter((t) => !!t);
-    if (!(e != null && e.length) && typeof this._component == "function") {
-      const t = new this._component();
-      typeof t._getVueClassComponentOptions == "function" && (e = (t._getVueClassComponentOptions() || []).filter((n) => !!n));
+    let allOptions = (this._component && collectStaticPropertyFromPrototypeChain(this._component, "__vccOpts") || []).map((vccOptions) => vccOptions.__component_decorator_original_options).filter((options) => !!options);
+    if (!(allOptions == null ? void 0 : allOptions.length) && typeof this._component === "function") {
+      const instance = new this._component();
+      if (typeof instance._getVueClassComponentOptions === "function") {
+        allOptions = (instance._getVueClassComponentOptions() || []).filter((options) => !!options);
+      }
     }
-    return e || [];
+    return allOptions || [];
   }
-  injectData(e) {
+  injectData(injectDefinitions) {
     this._checkValidInstanceAndThrowError();
-    const t = this.reactiveWrapper;
-    if (Array.isArray(e))
-      e.filter(h).forEach((n) => t[n] = a.inject(n));
-    else if (typeof e == "object") {
-      const n = [
-        ...Object.getOwnPropertyNames(e),
-        ...Object.getOwnPropertySymbols(e)
-      ].filter(h);
-      for (let o = 0; o < n.length; o++) {
-        const i = n[o], s = e[i];
-        let c, f = i;
-        typeof s == "symbol" ? f = s : typeof s == "object" ? (f = s.from || f, c = s.default) : s && (f = String(s)), typeof c == "function" ? t[i] = a.inject(f, c, !0) : t[i] = a.inject(f, c, !1);
+    const instance = this.reactiveWrapper;
+    if (Array.isArray(injectDefinitions)) {
+      injectDefinitions.filter(isNotInternalHookName).forEach((propName) => instance[propName] = CompositionApi.inject(propName));
+    } else if (typeof injectDefinitions === "object") {
+      const injectPropertyIndexes = [
+        ...Object.getOwnPropertyNames(injectDefinitions),
+        ...Object.getOwnPropertySymbols(injectDefinitions)
+      ].filter(isNotInternalHookName);
+      for (let i = 0; i < injectPropertyIndexes.length; i++) {
+        const propName = injectPropertyIndexes[i];
+        const injectSpec = injectDefinitions[propName];
+        let defaultValue = void 0;
+        let fromProvidedKey = propName;
+        if (typeof injectSpec === "symbol") {
+          fromProvidedKey = injectSpec;
+        } else if (typeof injectSpec === "object") {
+          fromProvidedKey = injectSpec.from || fromProvidedKey;
+          defaultValue = injectSpec.default;
+        } else if (injectSpec) {
+          fromProvidedKey = String(injectSpec);
+        }
+        if (typeof defaultValue === "function") {
+          instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, true);
+        } else {
+          instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, false);
+        }
       }
     }
     return this;
   }
-  provideData(e) {
-    let t = e;
-    return typeof e == "function" && (t = e.apply(this.reactiveWrapper)), typeof t == "object" && [
-      ...Object.getOwnPropertyNames(t),
-      ...Object.getOwnPropertySymbols(t)
-    ].filter(h).forEach((n) => a.provide(n, t[n])), this;
+  provideData(providedValuesSpec) {
+    let providedValues = providedValuesSpec;
+    if (typeof providedValuesSpec === "function") {
+      providedValues = providedValuesSpec.apply(this.reactiveWrapper);
+    }
+    if (typeof providedValues === "object") {
+      [
+        ...Object.getOwnPropertyNames(providedValues),
+        ...Object.getOwnPropertySymbols(providedValues)
+      ].filter(isNotInternalHookName).forEach((propName) => CompositionApi.provide(propName, providedValues[propName]));
+    }
+    return this;
   }
   registerLifeCycleHooks() {
     return this.registerAdditionalLifeCycleHooks(this.rawInstance);
   }
-  registerAdditionalLifeCycleHooks(e) {
+  registerAdditionalLifeCycleHooks(hookFunctions) {
     this._checkValidInstanceAndThrowError();
-    const t = e && m(e) || void 0;
-    return t && Object.getOwnPropertyNames(b).filter((n) => typeof t[n] == "function").forEach((n) => b[n](t[n].bind(this.reactiveWrapper), this.rawInstance.$)), this;
-  }
-  setComponentClass(e) {
-    return this._component = e, this;
-  }
-  watcherForPropertyChange(e) {
-    return e && this._watchersToCreate.push(e), this;
-  }
-  _createAllWatchers() {
-    for (; Array.isArray(this._watchersToCreate) && this._watchersToCreate.length > 0; )
-      try {
-        this._performWatcherCreation(this._watchersToCreate.shift());
-      } catch (e) {
-        console.error("Failed to create watcher!", e);
-      }
+    const rawHookFunctions = hookFunctions && toRaw(hookFunctions) || void 0;
+    if (rawHookFunctions) {
+      Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions).filter((hookName) => typeof rawHookFunctions[hookName] === "function").forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](rawHookFunctions[hookName].bind(this.reactiveWrapper), this.rawInstance.$));
+    }
     return this;
   }
-  _performWatcherCreation(e) {
+  setComponentClass(component) {
+    this._component = component;
+    return this;
+  }
+  watcherForPropertyChange(watchers) {
+    if (watchers) {
+      this._watchersToCreate.push(watchers);
+    }
+    return this;
+  }
+  _createAllWatchers() {
+    while (Array.isArray(this._watchersToCreate) && this._watchersToCreate.length > 0) {
+      try {
+        this._performWatcherCreation(this._watchersToCreate.shift());
+      } catch (error) {
+        console.error("Failed to create watcher!", error);
+      }
+    }
+    return this;
+  }
+  _performWatcherCreation(watchers) {
     this._checkValidInstanceAndThrowError();
-    const t = this.reactiveWrapper;
-    if (t && typeof e == "object") {
-      const n = Object.getOwnPropertyNames(e).filter(h).filter((o) => e && e[o]);
-      for (const o of n) {
-        let i = e[o];
-        Array.isArray(i) || (i = [i]);
-        const s = function(c, f) {
-          return function() {
-            return c[f];
+    const reactiveInstance = this.reactiveWrapper;
+    if (reactiveInstance && typeof watchers === "object") {
+      const watchNames = Object.getOwnPropertyNames(watchers).filter(isNotInternalHookName).filter((watchName) => watchers && watchers[watchName]);
+      for (const watchName of watchNames) {
+        let watchSpecs = watchers[watchName];
+        if (!Array.isArray(watchSpecs)) {
+          watchSpecs = [watchSpecs];
+        }
+        const watchTarget = function(instance, propertyName) {
+          return function getPropertyValueForWatcher() {
+            return instance[propertyName];
           };
-        }(this.reactiveWrapper, o);
-        for (let c = 0; c < i.length; c++) {
-          const f = i[c];
-          if (typeof f == "function")
-            a.watch(s, f.bind(t));
-          else {
-            let p, u, d = {};
-            if (typeof f == "object" ? (d = f, typeof f.handler == "string" ? u = f.handler : p = f.handler) : typeof f == "string" && (u = f), !p && u) {
-              if (u === o)
-                throw new Error(`Invalid watcher defined!
-                                    Can not watch on property ${o} and call same property on change!`);
-              if (typeof this.rawInstance[u] != "function")
-                throw new Error(`Invalid watcher defined!
-                                    The named handler '${u}' for watched property '${o}'
-                                    is no member function of the component instance!`);
-              p = function(F) {
-                return function(...k) {
-                  return this[F].call(this, ...k);
-                };
-              }(u).bind(t);
-            }
-            if (p)
-              try {
-                a.watch(s, p, d);
-              } catch (_) {
-                console.error(`Failed to create watcher on property ${o}`, f, _);
+        }(this.reactiveWrapper, watchName);
+        for (let i = 0; i < watchSpecs.length; i++) {
+          const currentWatchSpec = watchSpecs[i];
+          if (typeof currentWatchSpec === "function") {
+            CompositionApi.watch(watchTarget, currentWatchSpec.bind(reactiveInstance));
+          } else {
+            let handler = void 0;
+            let handlerName = void 0;
+            let watchOptions = {};
+            if (typeof currentWatchSpec === "object") {
+              watchOptions = currentWatchSpec;
+              if (typeof currentWatchSpec.handler === "string") {
+                handlerName = currentWatchSpec.handler;
+              } else {
+                handler = currentWatchSpec.handler;
               }
-            else
-              a.warn(`No valid watch handler for property "${o}" has been provided.`);
+            } else if (typeof currentWatchSpec === "string") {
+              handlerName = currentWatchSpec;
+            }
+            if (!handler && handlerName) {
+              if (handlerName === watchName) {
+                throw new Error(`Invalid watcher defined!
+                                    Can not watch on property ${watchName} and call same property on change!`);
+              } else if (typeof this.rawInstance[handlerName] !== "function") {
+                throw new Error(`Invalid watcher defined!
+                                    The named handler '${handlerName}' for watched property '${watchName}'
+                                    is no member function of the component instance!`);
+              }
+              handler = function createWatchHandler(propToCall) {
+                return function watchHandlerAsName(...args) {
+                  return this[propToCall].call(this, ...args);
+                };
+              }(handlerName).bind(reactiveInstance);
+            }
+            if (handler) {
+              try {
+                CompositionApi.watch(watchTarget, handler, watchOptions);
+              } catch (error) {
+                console.error(`Failed to create watcher on property ${watchName}`, currentWatchSpec, error);
+              }
+            } else {
+              CompositionApi.warn(`No valid watch handler for property "${watchName}" has been provided.`);
+            }
           }
         }
       }
     }
     return this;
   }
-  _defineReactiveProperty(e, t, n) {
-    return this._checkValidInstanceAndThrowError(), e && Object.defineProperty(this.rawInstance, e, {
-      get: pe(t).bind(this.reactiveWrapper),
-      set: n ? he(t).bind(this.reactiveWrapper) : void 0
-    }), this;
+  _defineReactiveProperty(property, vueReference, hasSetter) {
+    this._checkValidInstanceAndThrowError();
+    if (property) {
+      Object.defineProperty(this.rawInstance, property, {
+        get: createReferenceGetterFunc(vueReference).bind(this.reactiveWrapper),
+        set: hasSetter ? createReferenceSetterFunc(vueReference).bind(this.reactiveWrapper) : void 0
+      });
+    }
+    return this;
   }
   _checkValidInstanceAndThrowError() {
-    if (this._rawInstance === void 0)
+    if (this._rawInstance === void 0) {
       throw new Error("Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!");
+    }
   }
 }
-function w(r, e = {}) {
-  e = e || {};
-  const t = ye(r);
-  e.computed = Object.assign({}, t, e.computed);
-  const n = r.__decorators__;
-  if (n && n.length > 0) {
-    const s = e.methods || {}, c = ae(r);
-    e.methods = re(s, c), n.forEach((f) => f(e)), e.methods = s;
+function componentFactory(component, options = {}) {
+  options = options || {};
+  const computedProperties = getComputedValuesDefinitionFromComponentPrototype(component);
+  options.computed = Object.assign({}, computedProperties, options.computed);
+  const decorators = component.__decorators__;
+  if (decorators && decorators.length > 0) {
+    const originalMethods = options.methods || {};
+    const classMethods = getInstanceMethodsFromClass(component);
+    options.methods = createProxyRedirectReads(originalMethods, classMethods);
+    decorators.forEach((decoratorFunction) => decoratorFunction(options));
+    options.methods = originalMethods;
   }
-  me(r, e);
-  const o = r;
-  typeof e.beforeCreate == "function" && (typeof o.beforeCreate == "function" ? o.beforeCreate = fe(o.beforeCreate, e.beforeCreate) : o.beforeCreate = e.beforeCreate), function(c, f) {
-    c.prototype._getVueClassComponentOptions = function() {
-      const u = se(this, "_getVueClassComponentOptions");
-      return (typeof u == "function" ? u() || [] : []).concat([f]);
+  applyMethodsFromOptions(component, options);
+  const classComponent = component;
+  if (typeof options.beforeCreate === "function") {
+    if (typeof classComponent.beforeCreate === "function") {
+      classComponent.beforeCreate = generateMultiFunctionWrapper(classComponent.beforeCreate, options.beforeCreate);
+    } else {
+      classComponent.beforeCreate = options.beforeCreate;
+    }
+  }
+  (function storeOptions(clazz, componentOptions) {
+    clazz.prototype._getVueClassComponentOptions = function _getVueClassComponentOptions() {
+      const parentFunc = getPropertyFromParentClassDefinition(this, "_getVueClassComponentOptions");
+      const parentOptions = typeof parentFunc === "function" ? parentFunc() || [] : [];
+      return parentOptions.concat([componentOptions]);
     };
-  }(r, e);
-  const i = de(o, e);
-  if (i)
-    o.__vccOpts = i;
-  else
+  })(component, options);
+  const vccOptions = createVccOptions(classComponent, options);
+  if (!vccOptions) {
     throw new Error("Failed to create Vue class component options!");
-  return o;
-}
-function de(r, e = {}) {
-  if (!r || !e)
-    return;
-  const n = {
-    name: e.name || r._componentTag || r.name,
-    setup: Ce(r),
-    __component_decorator_original_options: e
-  };
-  return Object.defineProperty(n, "props", {
-    get: be(r),
-    configurable: !0,
-    enumerable: !0
-  }), Object.defineProperty(n, "components", {
-    get: ge(r),
-    configurable: !0,
-    enumerable: !0
-  }), n.render = function(i) {
-    if (i && typeof i.render == "function")
-      return i.render(a.h, i._setupContext);
-  }, n;
-}
-function ye(r) {
-  const e = {}, t = r.prototype, n = [].concat(Object.getOwnPropertyNames(t)).concat(Object.getOwnPropertySymbols(t));
-  for (const o of n) {
-    if (o === "constructor" || o === "prototype" || typeof o == "string" && (E.indexOf(o) > -1 || o.startsWith("$")))
-      return;
-    const i = Object.getOwnPropertyDescriptor(t, o);
-    e !== void 0 && (i == null ? void 0 : i.get) && (i == null ? void 0 : i.set) ? e[o] = {
-      get: i.get,
-      set: i.set
-    } : e !== void 0 && (i == null ? void 0 : i.get) && (e[o] = i.get);
+  } else {
+    classComponent.__vccOpts = vccOptions;
   }
-  return e;
+  return classComponent;
 }
-function me(r, e) {
-  const t = r.prototype;
-  return Object.getOwnPropertyNames((e == null ? void 0 : e.methods) || {}).filter((n) => typeof ((e == null ? void 0 : e.methods) || {})[n] == "function").forEach(function(n) {
-    if (!(e != null && e.methods) || typeof e.methods[n] != "function")
+function createVccOptions(component, options = {}) {
+  if (!component || !options) {
+    return void 0;
+  }
+  const name = options.name || component._componentTag || component.name;
+  const vccOpts = {
+    name,
+    setup: generateSetupFunction(component),
+    __component_decorator_original_options: options,
+    __component_class: component
+  };
+  Object.defineProperty(vccOpts, "props", {
+    get: generateGetterForProperties(component),
+    configurable: true,
+    enumerable: true
+  });
+  Object.defineProperty(vccOpts, "components", {
+    get: generateGetterForComponents(component),
+    configurable: true,
+    enumerable: true
+  });
+  vccOpts.render = function customRenderHook(renderContext) {
+    var _a;
+    const componentInstance = (_a = renderContext == null ? void 0 : renderContext.$) == null ? void 0 : _a.setupState;
+    if (componentInstance && typeof componentInstance.render === "function") {
+      return componentInstance.render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
+    }
+  };
+  return vccOpts;
+}
+function getComputedValuesDefinitionFromComponentPrototype(component) {
+  const allComputedValues = {};
+  const proto = component.prototype;
+  const allPropertyKeys = [].concat(Object.getOwnPropertyNames(proto)).concat(Object.getOwnPropertySymbols(proto));
+  for (const key of allPropertyKeys) {
+    if (key === "constructor" || key === "prototype") {
       return;
-    const o = e.methods[n];
-    if (typeof t[n] == "function") {
-      const i = t[n];
-      t[n] = function(...s) {
-        return i.apply(this, s), o.apply(this, s);
+    }
+    if (typeof key === "string" && ($internalHookNames.indexOf(key) > -1 || key.startsWith("$"))) {
+      return;
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(proto, key);
+    if (allComputedValues !== void 0 && (descriptor == null ? void 0 : descriptor.get) && (descriptor == null ? void 0 : descriptor.set)) {
+      allComputedValues[key] = {
+        get: descriptor.get,
+        set: descriptor.set
       };
-    } else if (t[n] === void 0)
-      t[n] = o;
-    else
+    } else if (allComputedValues !== void 0 && (descriptor == null ? void 0 : descriptor.get)) {
+      allComputedValues[key] = descriptor.get;
+    }
+  }
+  return allComputedValues;
+}
+function applyMethodsFromOptions(component, options) {
+  const proto = component.prototype;
+  Object.getOwnPropertyNames((options == null ? void 0 : options.methods) || {}).filter((methodName) => typeof ((options == null ? void 0 : options.methods) || {})[methodName] === "function").forEach(function(methodName) {
+    if (!(options == null ? void 0 : options.methods) || typeof options.methods[methodName] !== "function") {
+      return;
+    }
+    const newFunction = options.methods[methodName];
+    if (typeof proto[methodName] === "function") {
+      const originalFunction = proto[methodName];
+      proto[methodName] = function(...args) {
+        originalFunction.apply(this, args);
+        return newFunction.apply(this, args);
+      };
+    } else if (proto[methodName] === void 0) {
+      proto[methodName] = newFunction;
+    } else {
       throw new Error("A new function must not overwrite a non-function value");
-  }), r;
-}
-function be(r) {
-  const e = {};
-  let t = !1;
-  return function() {
-    if (!t) {
-      t = !0;
-      const o = (new C(r).getOptionsForComponent() || []).map((i) => i.props).filter((i) => i != null);
-      for (const i of o)
-        Array.isArray(i) ? i.forEach((s) => {
-          e[s] = {};
-        }) : typeof i == "object" && Object.assign(e, i);
     }
-    return e;
-  };
+  });
+  return component;
 }
-function ge(r) {
-  const e = {};
-  let t = !1;
-  return function() {
-    if (!t) {
-      t = !0;
-      const o = (new C(r).getOptionsForComponent() || []).map((i) => i.components).filter((i) => i != null);
-      for (const i of o)
-        typeof i == "object" && Object.assign(e, i);
+function generateGetterForProperties(component) {
+  const propertiesDefinition = {};
+  let isInitialised = false;
+  return function readPropertiesDefinition() {
+    if (!isInitialised) {
+      isInitialised = true;
+      const allPropDefinitions = (new ComponentBuilderImpl(component).getOptionsForComponent() || []).map((options) => options["props"]).filter((value) => value !== void 0 && value !== null);
+      for (const propDef of allPropDefinitions) {
+        if (Array.isArray(propDef)) {
+          propDef.forEach((propertyName) => {
+            propertiesDefinition[propertyName] = {};
+          });
+        } else if (typeof propDef === "object") {
+          Object.assign(propertiesDefinition, propDef);
+        }
+      }
     }
-    return e;
+    return propertiesDefinition;
   };
 }
-function Ce(r) {
-  return function(t, n) {
-    $(n);
-    const o = a.getCurrentInstance() || {}, i = new C().setComponentClass(r).createAndUseNewInstance(), s = i.getOptionsForComponent();
-    return s.forEach((c) => {
-      typeof (c == null ? void 0 : c.beforeCreate) == "function" && c.beforeCreate.call(o);
-    }), i.rawInstance.$ || (i.rawInstance.$ = o, j(i.rawInstance, (o == null ? void 0 : o.props) || t)), i.registerLifeCycleHooks(), s.forEach((c) => i.applyDataValues(c.data).createComputedValues(c.computed).injectData(c.inject).provideData(c.provide).registerAdditionalLifeCycleHooks(c).watcherForPropertyChange(c.watch)), typeof i.rawInstance.setup == "function" && i.rawInstance.setup.call(i.instance, i, t, n), s.forEach((c) => {
-      typeof c.setup == "function" && c.setup.call(i.instance, i, t, n);
-    }), typeof i.instance.created == "function" && i.instance.created(), oe(), i.build();
+function generateGetterForComponents(component) {
+  const importedComponents = {};
+  let isInitialised = false;
+  return function readComponentsDefinition() {
+    if (!isInitialised) {
+      isInitialised = true;
+      const allComponentsDefinitions = (new ComponentBuilderImpl(component).getOptionsForComponent() || []).map((options) => options["components"]).filter((value) => value !== void 0 && value !== null);
+      for (const componentsDef of allComponentsDefinitions) {
+        if (typeof componentsDef === "object") {
+          Object.assign(importedComponents, componentsDef);
+        }
+      }
+    }
+    return importedComponents;
   };
 }
-function _e(r) {
-  return typeof r == "function" ? w(r) : function(t) {
-    return w(t, r);
+function generateSetupFunction(component) {
+  return function setupClassComponent(properties, context) {
+    setCurrentSetupContext(context);
+    const vueComponentInternalInstance = CompositionApi.getCurrentInstance() || {};
+    const builder = new ComponentBuilderImpl().setComponentClass(component).createAndUseNewInstance();
+    const allOptions = builder.getOptionsForComponent();
+    allOptions.forEach((options) => {
+      if (typeof (options == null ? void 0 : options.beforeCreate) === "function") {
+        options.beforeCreate.call(vueComponentInternalInstance);
+      }
+    });
+    builder.rawInstance.$ = vueComponentInternalInstance;
+    defineNewLinkedProperties(builder.rawInstance, (vueComponentInternalInstance == null ? void 0 : vueComponentInternalInstance.props) || properties);
+    addLegacyRenderingFunctions(builder.rawInstance);
+    builder.rawInstance._setupContext = context;
+    builder.registerLifeCycleHooks();
+    allOptions.forEach((options) => builder.applyDataValues(options.data).createComputedValues(options.computed).injectData(options.inject).provideData(options.provide).registerAdditionalLifeCycleHooks(options).watcherForPropertyChange(options.watch));
+    if (typeof builder.rawInstance.setup === "function") {
+      builder.rawInstance.setup.call(builder.instance, builder, properties, context);
+    }
+    allOptions.forEach((options) => {
+      if (typeof options.setup === "function") {
+        options.setup.call(builder.instance, builder, properties, context);
+      }
+    });
+    if (typeof builder.instance.created === "function") {
+      builder.instance.created();
+    }
+    clearCurrentSetupContext();
+    return builder.build();
   };
 }
-_e.registerHooks = function() {
+function Component(options) {
+  if (typeof options === "function") {
+    const Component2 = options;
+    return componentFactory(Component2);
+  }
+  return function ComponentDecorator(Component2) {
+    return componentFactory(Component2, options);
+  };
+}
+Component.registerHooks = function registerHooks() {
 };
-function $e(...r) {
-  return r[0];
+function mixins(...Constructors) {
+  return Constructors[0];
 }
-function Ae(r) {
-  return function(t, n, o) {
-    const i = typeof t == "function" ? t : t.constructor;
-    i.__decorators__ || (i.__decorators__ = []), typeof o != "number" && (o = void 0), i.__decorators__.push((s) => r(s, n || Symbol(), o));
+function createDecorator(callback) {
+  return function CreatedVueDecorator(target, key, index) {
+    const ConstructorFunc = typeof target === "function" ? target : target.constructor;
+    if (!ConstructorFunc.__decorators__) {
+      ConstructorFunc.__decorators__ = [];
+    }
+    if (typeof index !== "number") {
+      index = void 0;
+    }
+    ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
   };
 }
 export {
-  E as $internalHookNames,
-  ue as $lifeCycleHookNames,
-  _e as Component,
-  a as CompositionApi,
-  je as MixinCustomRender,
-  Pe as Vue,
-  ie as VueComponentBaseImpl,
-  te as addLegacyRenderingFunctions,
-  Ae as createDecorator,
-  _e as default,
-  le as isInternalHookName,
-  h as isNotInternalHookName,
-  $e as mixins
+  $internalHookNames,
+  $lifeCycleHookNames,
+  Component,
+  CompositionApi,
+  MixinCustomRender,
+  Vue,
+  VueComponentBaseImpl,
+  addLegacyRenderingFunctions,
+  createDecorator,
+  Component as default,
+  isInternalHookName,
+  isNotInternalHookName,
+  mixins
 };
