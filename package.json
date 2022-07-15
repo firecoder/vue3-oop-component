@@ -58,6 +58,10 @@
     "vitest": "^0.18.0",
     "vue-tsc": "^0.38.5"
   },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "publishConfig": {
     "@nexxar:registry": "https://npm.pkg.github.com"
   },
