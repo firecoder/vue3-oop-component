@@ -24,7 +24,7 @@ import type {
     VueComponentSetupFunction,
 } from "./component-decorator-types";
 
-import { CompositionApi } from "../vue";
+import { addLegacyRenderingFunctions, CompositionApi } from "../vue";
 import { getInstanceMethodsFromClass, getPropertyFromParentClassDefinition } from "../utilities/traverse-prototype";
 import { createProxyRedirectReads, defineNewLinkedProperties } from "../utilities/properties";
 import { generateMultiFunctionWrapper } from "../utilities/wrappers";
@@ -386,10 +386,9 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         });
 
         // assign the current Vue component instance in case the base constructor has not been called properly!
-        if (!builder.rawInstance.$) {
-            builder.rawInstance.$ = vueComponentInternalInstance;
-            defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
-        }
+        builder.rawInstance.$ = vueComponentInternalInstance;
+        defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
+        addLegacyRenderingFunctions(builder.rawInstance);
 
         builder.registerLifeCycleHooks();
 
