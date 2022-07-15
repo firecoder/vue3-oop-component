@@ -1,7 +1,6 @@
 # just for now, until releases are valuable to be included
 lib
 #dist
-package-lock.json
 
 
 
