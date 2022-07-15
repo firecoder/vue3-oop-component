@@ -1,6 +1,7 @@
 import type { Component, Slot, VNodeProps, VNode, VNodeArrayChildren } from "vue";
 import type { VueClass } from "./vue";
 export declare type LegacyVNodeChildren = string | number | boolean | VNode | VNodeArrayChildren;
+export declare type ScopedSlot = Function;
 export declare type Data = Record<string, unknown>;
 export declare type VNodeData = Data & VNodeProps;
 export interface LegacyVNodeDirective {
@@ -24,7 +25,7 @@ export interface LegacyVNodeProps {
     directives?: LegacyVNodeDirective[];
     props?: Record<string, unknown>;
     slot?: string;
-    scopedSlots?: Record<string, Function>;
+    scopedSlots?: Record<string, ScopedSlot>;
     model?: {
         value: any;
         callback: (v: any) => void;
@@ -33,7 +34,7 @@ export interface LegacyVNodeProps {
 }
 export declare type LegacyScopedSlotsData = Array<{
     key: string;
-    fn: Function;
+    fn: ScopedSlot;
 } | LegacyScopedSlotsData>;
 /**
  * Define the render helper functions that were once available with every Vue component in Vue 2.

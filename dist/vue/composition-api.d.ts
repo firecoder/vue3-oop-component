@@ -1,13 +1,14 @@
 /**
  * Exports composition API functions as part of an object, which enables mocking and testing.
  */
-import { inject, onActivated, onDeactivated, onErrorCaptured, provide, ref, warn, watch } from "vue";
+import { h, inject, onActivated, onDeactivated, onErrorCaptured, provide, ref, warn, watch } from "vue";
 /**
  * This redirection object is used for better testability of the component decorator.
  */
 export declare const CompositionApi: {
     computed: typeof import("@vue/reactivity").computed;
     getCurrentInstance: () => import("vue").ComponentInternalInstance;
+    h: typeof h;
     inject: typeof inject;
     onActivated: typeof onActivated;
     onBeforeMount: (hook: () => any, target?: import("vue").ComponentInternalInstance) => false | Function;

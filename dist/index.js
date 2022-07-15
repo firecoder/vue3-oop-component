@@ -1,134 +1,37 @@
-var F = Object.defineProperty;
-var k = (r, e, t) => e in r ? F(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
-var h = (r, e, t) => (k(r, typeof e != "symbol" ? e + "" : e, t), t);
-import { toRaw as y, isReactive as D, reactive as v, unref as V, computed as I, getCurrentInstance as g, inject as N, onActivated as W, onBeforeMount as T, onBeforeUnmount as U, onBeforeUpdate as R, onDeactivated as S, onMounted as H, onRenderTracked as B, onRenderTriggered as x, onErrorCaptured as L, onServerPrefetch as M, onUnmounted as G, onUpdated as K, provide as q, ref as J, warn as Q, watch as m, nextTick as X } from "vue";
-function j(r) {
-  return !(r instanceof Function) && r instanceof Object ? r.constructor : r;
-}
-function w(r) {
-  if (!r)
-    return [];
-  const e = [];
-  r = j(r);
-  let t = Object.getPrototypeOf(r);
-  for (; t; )
-    e.push(t), t = Object.getPrototypeOf(t);
-  return e.pop(), e.pop(), e.reverse(), e;
-}
-function Y(r, e) {
-  if (!r || !e)
-    return [];
-  const t = (w(r) || []).filter((n) => Object.hasOwn(n, e)).map((n) => n[e]);
-  return Object.hasOwn(r, e) && t.push(r[e]), t;
-}
-function Z(r, e) {
-  if (!r)
-    return;
-  const t = w(r);
-  t.reverse();
-  for (const n of t) {
-    const o = n.prototype;
-    if (o && Object.hasOwn(o, e))
-      return o[e];
-  }
-}
-function z(r) {
-  const e = {};
-  if (!r)
-    return {};
-  const t = w(r);
-  t.push(j(r)), t.reverse();
-  for (const n of t) {
-    const o = n.prototype;
-    [].concat(Object.getOwnPropertyNames(o)).concat(Object.getOwnPropertySymbols(o)).forEach((c) => {
-      const s = o[c];
-      !e[c] && typeof s == "function" && (e[c] = s);
-    });
-  }
-  return e;
-}
-function P(r, e) {
-  if (typeof r > "u" || typeof e > "u")
-    return r;
-  const t = y(r), n = D(e) ? e : v(e);
-  return e && typeof e == "object" && [].concat(Object.keys(e)).concat(Object.getOwnPropertySymbols(e)).forEach((o) => {
-    Object.defineProperty(t, o, {
-      get() {
-        return V(n[o]);
-      },
-      set() {
-      },
-      configurable: !0,
-      enumerable: !0
-    });
-  }), r;
-}
-function ee(r, e) {
-  const t = {};
-  return e = e || {}, new Proxy(r || {}, {
-    get(n, o) {
-      return !t[o] && o in n ? n[o] : t[o] ? void 0 : e[o];
-    },
-    set(n, o, c) {
-      return n[o] = c, delete t[o], !0;
-    },
-    defineProperty(n, o, c) {
-      return Object.defineProperty(n, o, c), delete t[o], !0;
-    },
-    deleteProperty(n, o) {
-      return delete n[o], o in e && (t[o] = !0), !0;
-    },
-    getOwnPropertyDescriptor(n, o) {
-      return !t[o] && Object.hasOwn(n, o) ? Object.getOwnPropertyDescriptor(n, o) : !t[o] && Object.hasOwn(e, o) ? Object.getOwnPropertyDescriptor(e, o) : void 0;
-    },
-    has(n, o) {
-      return !t[o] && (typeof o == "string" && Object.hasOwn(n, o) || e && Object.hasOwn(e, o));
-    },
-    ownKeys(n) {
-      return Object.keys(n).concat(Object.keys(e || {})).filter((o) => !t[o]);
-    }
-  });
-}
-function te(...r) {
-  return r = (r || []).filter((e) => e && typeof e == "function"), function(...t) {
-    let n;
-    if (Array.isArray(r) && r.length > 0) {
-      n = r[0].apply(this, t);
-      for (let o = 1; o < r.length; o++)
-        r[o].apply(this, t);
-    }
-    return n;
-  };
-}
+var D = Object.defineProperty;
+var V = (r, e, t) => e in r ? D(r, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[e] = t;
+var l = (r, e, t) => (V(r, typeof e != "symbol" ? e + "" : e, t), t);
+import { computed as I, getCurrentInstance as O, h as S, inject as N, onActivated as W, onBeforeMount as x, onBeforeUnmount as T, onBeforeUpdate as U, onDeactivated as R, onMounted as H, onRenderTracked as B, onRenderTriggered as L, onErrorCaptured as M, onServerPrefetch as G, onUnmounted as K, onUpdated as q, provide as J, ref as Q, warn as X, watch as y, toRaw as m, isReactive as Y, reactive as v, unref as Z, nextTick as z } from "vue";
 const a = {
   computed: I,
-  getCurrentInstance: g,
+  getCurrentInstance: O,
+  h: S,
   inject: N,
   onActivated: W,
-  onBeforeMount: T,
-  onBeforeUnmount: U,
-  onBeforeUpdate: R,
-  onDeactivated: S,
+  onBeforeMount: x,
+  onBeforeUnmount: T,
+  onBeforeUpdate: U,
+  onDeactivated: R,
   onMounted: H,
   onRenderTracked: B,
-  onRenderTriggered: x,
-  onErrorCaptured: L,
-  onServerPrefetch: M,
-  onUnmounted: G,
-  onUpdated: K,
-  provide: q,
-  ref: J,
-  warn: Q,
-  watch: m
+  onRenderTriggered: L,
+  onErrorCaptured: M,
+  onServerPrefetch: G,
+  onUnmounted: K,
+  onUpdated: q,
+  provide: J,
+  ref: Q,
+  warn: X,
+  watch: y
 };
-function re(r, e) {
+function ee(r, e) {
   var n;
   const t = (n = r.$) == null ? void 0 : n.proxy;
   if (typeof t[e] == "function")
     return t[e];
   throw new Error("Legacy function is not available with this Vue 3 build. Use @vue/compat instead!");
 }
-function ne(r) {
+function te(r) {
   const e = r;
   return [
     "$createElement",
@@ -152,27 +55,90 @@ function ne(r) {
     "_p"
   ].forEach((t) => Object.defineProperty(e, t, {
     get: function() {
-      return re(this, t);
+      return ee(this, t);
     },
     enumerable: !1,
     configurable: !0
   })), e;
 }
-function we(r) {
+function je(r) {
   return r;
 }
-class oe {
+function j(r, e) {
+  if (typeof r > "u" || typeof e > "u")
+    return r;
+  const t = m(r), n = Y(e) ? e : v(e);
+  return e && typeof e == "object" && [].concat(Object.keys(e)).concat(Object.getOwnPropertySymbols(e)).forEach((o) => {
+    Object.defineProperty(t, o, {
+      get() {
+        return Z(n[o]);
+      },
+      set() {
+      },
+      configurable: !0,
+      enumerable: !0
+    });
+  }), r;
+}
+function re(r, e) {
+  const t = {};
+  return e = e || {}, new Proxy(r || {}, {
+    get(n, o) {
+      return !t[o] && o in n ? n[o] : t[o] ? void 0 : e[o];
+    },
+    set(n, o, i) {
+      return n[o] = i, delete t[o], !0;
+    },
+    defineProperty(n, o, i) {
+      return Object.defineProperty(n, o, i), delete t[o], !0;
+    },
+    deleteProperty(n, o) {
+      return delete n[o], o in e && (t[o] = !0), !0;
+    },
+    getOwnPropertyDescriptor(n, o) {
+      return !t[o] && Object.hasOwn(n, o) ? Object.getOwnPropertyDescriptor(n, o) : !t[o] && Object.hasOwn(e, o) ? Object.getOwnPropertyDescriptor(e, o) : void 0;
+    },
+    has(n, o) {
+      return !t[o] && (typeof o == "string" && Object.hasOwn(n, o) || e && Object.hasOwn(e, o));
+    },
+    ownKeys(n) {
+      return Object.keys(n).concat(Object.keys(e || {})).filter((o) => !t[o]);
+    }
+  });
+}
+let P;
+function ne() {
+  return P;
+}
+function $(r) {
+  P = r;
+}
+function oe() {
+  $(void 0);
+}
+class ie {
   constructor() {
-    h(this, "$");
-    let e = g();
+    l(this, "$");
+    l(this, "_setupContext");
+    let e = O(), t = ne();
     Object.defineProperty(this, "$", {
       get: () => e,
-      set: (t) => {
-        e = t;
+      set: (n) => {
+        e = n;
       },
       enumerable: !1,
       configurable: !0
-    }), P(this, e == null ? void 0 : e.props), ne(this);
+    }), Object.defineProperty(this, "_setupContext", {
+      get: () => t,
+      set: (n) => {
+        t = n;
+      },
+      enumerable: !1,
+      configurable: !0
+    }), j(this, e == null ? void 0 : e.props), te(this);
+  }
+  getSetupContext() {
+    return this._setupContext;
   }
   get $el() {
     var e, t;
@@ -199,7 +165,7 @@ class oe {
   }
   get $nextTick() {
     var e, t;
-    return ((e = this.$) == null ? void 0 : e.n) || X.bind((t = this.$) == null ? void 0 : t.proxy);
+    return ((e = this.$) == null ? void 0 : e.n) || z.bind((t = this.$) == null ? void 0 : t.proxy);
   }
   get $parent() {
     var e;
@@ -226,7 +192,7 @@ class oe {
     return (e = this.$) == null ? void 0 : e.slots;
   }
   $watch(e, t, n) {
-    return typeof e == "string" ? m(() => this[e], t, n) : m(e, t, n);
+    return typeof e == "string" ? y(() => this[e], t, n) : y(e, t, n);
   }
   setup() {
   }
@@ -234,7 +200,64 @@ class oe {
     return [];
   }
 }
-const _e = oe, b = {
+const Pe = ie;
+function A(r) {
+  return !(r instanceof Function) && r instanceof Object ? r.constructor : r;
+}
+function g(r) {
+  if (!r)
+    return [];
+  const e = [];
+  r = A(r);
+  let t = Object.getPrototypeOf(r);
+  for (; t; )
+    e.push(t), t = Object.getPrototypeOf(t);
+  return e.pop(), e.pop(), e.reverse(), e;
+}
+function ce(r, e) {
+  if (!r || !e)
+    return [];
+  const t = (g(r) || []).filter((n) => Object.hasOwn(n, e)).map((n) => n[e]);
+  return Object.hasOwn(r, e) && t.push(r[e]), t;
+}
+function se(r, e) {
+  if (!r)
+    return;
+  const t = g(r);
+  t.reverse();
+  for (const n of t) {
+    const o = n.prototype;
+    if (o && Object.hasOwn(o, e))
+      return o[e];
+  }
+}
+function ae(r) {
+  const e = {};
+  if (!r)
+    return {};
+  const t = g(r);
+  t.push(A(r)), t.reverse();
+  for (const n of t) {
+    const o = n.prototype;
+    [].concat(Object.getOwnPropertyNames(o)).concat(Object.getOwnPropertySymbols(o)).forEach((i) => {
+      const s = o[i];
+      !e[i] && typeof s == "function" && (e[i] = s);
+    });
+  }
+  return e;
+}
+function fe(...r) {
+  return r = (r || []).filter((e) => e && typeof e == "function"), function(...t) {
+    let n;
+    if (Array.isArray(r) && r.length > 0) {
+      n = r[0].apply(this, t);
+      for (let o = 1; o < r.length; o++)
+        r[o].apply(this, t);
+    }
+    return n;
+  };
+}
+const b = {
   beforeCreate: () => {
   },
   created: () => {
@@ -281,34 +304,34 @@ const _e = oe, b = {
   serverPrefetch: function(e, t) {
     return a.onServerPrefetch(e, t);
   }
-}, ce = Object.getOwnPropertyNames(b), $ = [
-  ...ce,
+}, ue = Object.getOwnPropertyNames(b), E = [
+  ...ue,
   "data",
   "render"
 ];
-function p(r) {
-  return !ie(r);
+function h(r) {
+  return !le(r);
 }
-function ie(r) {
-  return !!(r && typeof r == "string" && $.indexOf(r) >= 0);
+function le(r) {
+  return !!(r && typeof r == "string" && E.indexOf(r) >= 0);
 }
-function se(r) {
+function pe(r) {
   return function() {
     return r.value;
   };
 }
-function ae(r) {
+function he(r) {
   return function(t) {
     r.value = t;
   };
 }
-class _ {
+class C {
   constructor(e) {
-    h(this, "_component");
-    h(this, "_hasBeenFinalised", !1);
-    h(this, "_rawInstance");
-    h(this, "_reactiveWrapper");
-    h(this, "_watchersToCreate", []);
+    l(this, "_component");
+    l(this, "_hasBeenFinalised", !1);
+    l(this, "_rawInstance");
+    l(this, "_reactiveWrapper");
+    l(this, "_watchersToCreate", []);
     typeof e == "function" ? this.setComponentClass(e) : typeof e == "object" && (this.setComponentClass(e.constructor), this.instance = e);
   }
   createAndUseNewInstance() {
@@ -324,7 +347,7 @@ class _ {
     return this.reactiveWrapper;
   }
   set instance(e) {
-    typeof e == "object" ? (this._rawInstance = y(e), this._reactiveWrapper = v(this._rawInstance)) : (this._rawInstance = void 0, this._reactiveWrapper = void 0);
+    typeof e == "object" ? (this._rawInstance = m(e), this._reactiveWrapper = v(this._rawInstance)) : (this._rawInstance = void 0, this._reactiveWrapper = void 0);
   }
   get rawInstance() {
     return this._rawInstance;
@@ -344,7 +367,7 @@ class _ {
     return this;
   }
   createComputedValues(e) {
-    return this._checkValidInstanceAndThrowError(), e ? (Object.getOwnPropertyNames(e || {}).filter(p).forEach((t) => {
+    return this._checkValidInstanceAndThrowError(), e ? (Object.getOwnPropertyNames(e || {}).filter(h).forEach((t) => {
       const n = e[t];
       if (typeof n == "function")
         this._defineReactiveProperty(t, a.computed(n.bind(this.reactiveWrapper)), !1);
@@ -360,7 +383,7 @@ class _ {
     }), this) : this;
   }
   getOptionsForComponent() {
-    let e = (this._component && Y(this._component, "__vccOpts") || []).map((t) => t.__component_decorator_original_options).filter((t) => !!t);
+    let e = (this._component && ce(this._component, "__vccOpts") || []).map((t) => t.__component_decorator_original_options).filter((t) => !!t);
     if (!(e != null && e.length) && typeof this._component == "function") {
       const t = new this._component();
       typeof t._getVueClassComponentOptions == "function" && (e = (t._getVueClassComponentOptions() || []).filter((n) => !!n));
@@ -371,16 +394,16 @@ class _ {
     this._checkValidInstanceAndThrowError();
     const t = this.reactiveWrapper;
     if (Array.isArray(e))
-      e.filter(p).forEach((n) => t[n] = a.inject(n));
+      e.filter(h).forEach((n) => t[n] = a.inject(n));
     else if (typeof e == "object") {
       const n = [
         ...Object.getOwnPropertyNames(e),
         ...Object.getOwnPropertySymbols(e)
-      ].filter(p);
+      ].filter(h);
       for (let o = 0; o < n.length; o++) {
-        const c = n[o], s = e[c];
-        let i, f = c;
-        typeof s == "symbol" ? f = s : typeof s == "object" ? (f = s.from || f, i = s.default) : s && (f = String(s)), typeof i == "function" ? t[c] = a.inject(f, i, !0) : t[c] = a.inject(f, i, !1);
+        const i = n[o], s = e[i];
+        let c, f = i;
+        typeof s == "symbol" ? f = s : typeof s == "object" ? (f = s.from || f, c = s.default) : s && (f = String(s)), typeof c == "function" ? t[i] = a.inject(f, c, !0) : t[i] = a.inject(f, c, !1);
       }
     }
     return this;
@@ -390,14 +413,14 @@ class _ {
     return typeof e == "function" && (t = e.apply(this.reactiveWrapper)), typeof t == "object" && [
       ...Object.getOwnPropertyNames(t),
       ...Object.getOwnPropertySymbols(t)
-    ].filter(p).forEach((n) => a.provide(n, t[n])), this;
+    ].filter(h).forEach((n) => a.provide(n, t[n])), this;
   }
   registerLifeCycleHooks() {
     return this.registerAdditionalLifeCycleHooks(this.rawInstance);
   }
   registerAdditionalLifeCycleHooks(e) {
     this._checkValidInstanceAndThrowError();
-    const t = e && y(e) || void 0;
+    const t = e && m(e) || void 0;
     return t && Object.getOwnPropertyNames(b).filter((n) => typeof t[n] == "function").forEach((n) => b[n](t[n].bind(this.reactiveWrapper), this.rawInstance.$)), this;
   }
   setComponentClass(e) {
@@ -419,22 +442,22 @@ class _ {
     this._checkValidInstanceAndThrowError();
     const t = this.reactiveWrapper;
     if (t && typeof e == "object") {
-      const n = Object.getOwnPropertyNames(e).filter(p).filter((o) => e && e[o]);
+      const n = Object.getOwnPropertyNames(e).filter(h).filter((o) => e && e[o]);
       for (const o of n) {
-        let c = e[o];
-        Array.isArray(c) || (c = [c]);
-        const s = function(i, f) {
+        let i = e[o];
+        Array.isArray(i) || (i = [i]);
+        const s = function(c, f) {
           return function() {
-            return i[f];
+            return c[f];
           };
         }(this.reactiveWrapper, o);
-        for (let i = 0; i < c.length; i++) {
-          const f = c[i];
+        for (let c = 0; c < i.length; c++) {
+          const f = i[c];
           if (typeof f == "function")
             a.watch(s, f.bind(t));
           else {
-            let l, u, d = {};
-            if (typeof f == "object" ? (d = f, typeof f.handler == "string" ? u = f.handler : l = f.handler) : typeof f == "string" && (u = f), !l && u) {
+            let p, u, d = {};
+            if (typeof f == "object" ? (d = f, typeof f.handler == "string" ? u = f.handler : p = f.handler) : typeof f == "string" && (u = f), !p && u) {
               if (u === o)
                 throw new Error(`Invalid watcher defined!
                                     Can not watch on property ${o} and call same property on change!`);
@@ -442,17 +465,17 @@ class _ {
                 throw new Error(`Invalid watcher defined!
                                     The named handler '${u}' for watched property '${o}'
                                     is no member function of the component instance!`);
-              l = function(A) {
-                return function(...E) {
-                  return this[A].call(this, ...E);
+              p = function(F) {
+                return function(...k) {
+                  return this[F].call(this, ...k);
                 };
               }(u).bind(t);
             }
-            if (l)
+            if (p)
               try {
-                a.watch(s, l, d);
-              } catch (C) {
-                console.error(`Failed to create watcher on property ${o}`, f, C);
+                a.watch(s, p, d);
+              } catch (_) {
+                console.error(`Failed to create watcher on property ${o}`, f, _);
               }
             else
               a.warn(`No valid watch handler for property "${o}" has been provided.`);
@@ -464,8 +487,8 @@ class _ {
   }
   _defineReactiveProperty(e, t, n) {
     return this._checkValidInstanceAndThrowError(), e && Object.defineProperty(this.rawInstance, e, {
-      get: se(t).bind(this.reactiveWrapper),
-      set: n ? ae(t).bind(this.reactiveWrapper) : void 0
+      get: pe(t).bind(this.reactiveWrapper),
+      set: n ? he(t).bind(this.reactiveWrapper) : void 0
     }), this;
   }
   _checkValidInstanceAndThrowError() {
@@ -473,71 +496,74 @@ class _ {
       throw new Error("Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!");
   }
 }
-function O(r, e = {}) {
+function w(r, e = {}) {
   e = e || {};
-  const t = ue(r);
+  const t = ye(r);
   e.computed = Object.assign({}, t, e.computed);
   const n = r.__decorators__;
   if (n && n.length > 0) {
-    const s = e.methods || {}, i = z(r);
-    e.methods = ee(s, i), n.forEach((f) => f(e)), e.methods = s;
+    const s = e.methods || {}, c = ae(r);
+    e.methods = re(s, c), n.forEach((f) => f(e)), e.methods = s;
   }
-  le(r, e);
+  me(r, e);
   const o = r;
-  typeof e.beforeCreate == "function" && (typeof o.beforeCreate == "function" ? o.beforeCreate = te(o.beforeCreate, e.beforeCreate) : o.beforeCreate = e.beforeCreate), function(i, f) {
-    i.prototype._getVueClassComponentOptions = function() {
-      const u = Z(this, "_getVueClassComponentOptions");
+  typeof e.beforeCreate == "function" && (typeof o.beforeCreate == "function" ? o.beforeCreate = fe(o.beforeCreate, e.beforeCreate) : o.beforeCreate = e.beforeCreate), function(c, f) {
+    c.prototype._getVueClassComponentOptions = function() {
+      const u = se(this, "_getVueClassComponentOptions");
       return (typeof u == "function" ? u() || [] : []).concat([f]);
     };
   }(r, e);
-  const c = fe(o, e);
-  if (c)
-    o.__vccOpts = c;
+  const i = de(o, e);
+  if (i)
+    o.__vccOpts = i;
   else
     throw new Error("Failed to create Vue class component options!");
   return o;
 }
-function fe(r, e = {}) {
+function de(r, e = {}) {
   if (!r || !e)
     return;
   const n = {
     name: e.name || r._componentTag || r.name,
-    setup: de(r),
+    setup: Ce(r),
     __component_decorator_original_options: e
   };
   return Object.defineProperty(n, "props", {
-    get: he(r),
+    get: be(r),
     configurable: !0,
     enumerable: !0
   }), Object.defineProperty(n, "components", {
-    get: pe(r),
+    get: ge(r),
     configurable: !0,
     enumerable: !0
-  }), n;
+  }), n.render = function(i) {
+    if (i && typeof i.render == "function")
+      return i.render(a.h, i._setupContext);
+  }, n;
 }
-function ue(r) {
+function ye(r) {
   const e = {}, t = r.prototype, n = [].concat(Object.getOwnPropertyNames(t)).concat(Object.getOwnPropertySymbols(t));
   for (const o of n) {
-    if (o === "constructor" || o === "prototype" || typeof o == "string" && ($.indexOf(o) > -1 || o.startsWith("$")))
+    if (o === "constructor" || o === "prototype" || typeof o == "string" && (E.indexOf(o) > -1 || o.startsWith("$")))
       return;
-    const c = Object.getOwnPropertyDescriptor(t, o);
-    e !== void 0 && (c == null ? void 0 : c.get) && (c == null ? void 0 : c.set) ? e[o] = {
-      get: c.get,
-      set: c.set
-    } : e !== void 0 && (c == null ? void 0 : c.get) && (e[o] = c.get);
+    const i = Object.getOwnPropertyDescriptor(t, o);
+    e !== void 0 && (i == null ? void 0 : i.get) && (i == null ? void 0 : i.set) ? e[o] = {
+      get: i.get,
+      set: i.set
+    } : e !== void 0 && (i == null ? void 0 : i.get) && (e[o] = i.get);
   }
   return e;
 }
-function le(r, e) {
+function me(r, e) {
   const t = r.prototype;
   return Object.getOwnPropertyNames((e == null ? void 0 : e.methods) || {}).filter((n) => typeof ((e == null ? void 0 : e.methods) || {})[n] == "function").forEach(function(n) {
     if (!(e != null && e.methods) || typeof e.methods[n] != "function")
       return;
     const o = e.methods[n];
     if (typeof t[n] == "function") {
-      const c = t[n];
+      const i = t[n];
       t[n] = function(...s) {
-        return c.apply(this, s), o.apply(this, s);
+        return i.apply(this, s), o.apply(this, s);
       };
     } else if (t[n] === void 0)
       t[n] = o;
@@ -545,72 +571,73 @@ function le(r, e) {
       throw new Error("A new function must not overwrite a non-function value");
   }), r;
 }
-function he(r) {
+function be(r) {
   const e = {};
   let t = !1;
   return function() {
     if (!t) {
       t = !0;
-      const o = (new _(r).getOptionsForComponent() || []).map((c) => c.props).filter((c) => c != null);
-      for (const c of o)
-        Array.isArray(c) ? c.forEach((s) => {
+      const o = (new C(r).getOptionsForComponent() || []).map((i) => i.props).filter((i) => i != null);
+      for (const i of o)
+        Array.isArray(i) ? i.forEach((s) => {
           e[s] = {};
-        }) : typeof c == "object" && Object.assign(e, c);
+        }) : typeof i == "object" && Object.assign(e, i);
     }
     return e;
   };
 }
-function pe(r) {
+function ge(r) {
   const e = {};
   let t = !1;
   return function() {
     if (!t) {
       t = !0;
-      const o = (new _(r).getOptionsForComponent() || []).map((c) => c.components).filter((c) => c != null);
-      for (const c of o)
-        typeof c == "object" && Object.assign(e, c);
+      const o = (new C(r).getOptionsForComponent() || []).map((i) => i.components).filter((i) => i != null);
+      for (const i of o)
+        typeof i == "object" && Object.assign(e, i);
     }
     return e;
   };
 }
-function de(r) {
+function Ce(r) {
   return function(t, n) {
-    const o = g() || {}, c = new _().setComponentClass(r).createAndUseNewInstance(), s = c.getOptionsForComponent();
-    return s.forEach((i) => {
-      typeof (i == null ? void 0 : i.beforeCreate) == "function" && i.beforeCreate.call(o);
-    }), c.rawInstance.$ || (c.rawInstance.$ = o, P(c.rawInstance, (o == null ? void 0 : o.props) || t)), c.registerLifeCycleHooks(), s.forEach((i) => c.applyDataValues(i.data).createComputedValues(i.computed).injectData(i.inject).provideData(i.provide).registerAdditionalLifeCycleHooks(i).watcherForPropertyChange(i.watch)), typeof c.rawInstance.setup == "function" && c.rawInstance.setup.call(c.instance, c, t, n), s.forEach((i) => {
-      typeof i.setup == "function" && i.setup.call(c.instance, c, t, n);
-    }), typeof c.instance.created == "function" && c.instance.created(), c.build();
+    $(n);
+    const o = a.getCurrentInstance() || {}, i = new C().setComponentClass(r).createAndUseNewInstance(), s = i.getOptionsForComponent();
+    return s.forEach((c) => {
+      typeof (c == null ? void 0 : c.beforeCreate) == "function" && c.beforeCreate.call(o);
+    }), i.rawInstance.$ || (i.rawInstance.$ = o, j(i.rawInstance, (o == null ? void 0 : o.props) || t)), i.registerLifeCycleHooks(), s.forEach((c) => i.applyDataValues(c.data).createComputedValues(c.computed).injectData(c.inject).provideData(c.provide).registerAdditionalLifeCycleHooks(c).watcherForPropertyChange(c.watch)), typeof i.rawInstance.setup == "function" && i.rawInstance.setup.call(i.instance, i, t, n), s.forEach((c) => {
+      typeof c.setup == "function" && c.setup.call(i.instance, i, t, n);
+    }), typeof i.instance.created == "function" && i.instance.created(), oe(), i.build();
   };
 }
-function ye(r) {
-  return typeof r == "function" ? O(r) : function(t) {
-    return O(t, r);
+function _e(r) {
+  return typeof r == "function" ? w(r) : function(t) {
+    return w(t, r);
   };
 }
-ye.registerHooks = function() {
+_e.registerHooks = function() {
 };
-function Ce(...r) {
+function $e(...r) {
   return r[0];
 }
-function Oe(r) {
+function Ae(r) {
   return function(t, n, o) {
-    const c = typeof t == "function" ? t : t.constructor;
-    c.__decorators__ || (c.__decorators__ = []), typeof o != "number" && (o = void 0), c.__decorators__.push((s) => r(s, n || Symbol(), o));
+    const i = typeof t == "function" ? t : t.constructor;
+    i.__decorators__ || (i.__decorators__ = []), typeof o != "number" && (o = void 0), i.__decorators__.push((s) => r(s, n || Symbol(), o));
   };
 }
 export {
-  $ as $internalHookNames,
-  ce as $lifeCycleHookNames,
-  ye as Component,
+  E as $internalHookNames,
+  ue as $lifeCycleHookNames,
+  _e as Component,
   a as CompositionApi,
-  we as MixinCustomRender,
-  _e as Vue,
-  oe as VueComponentBaseImpl,
-  ne as addLegacyRenderingFunctions,
-  Oe as createDecorator,
-  ye as default,
-  ie as isInternalHookName,
-  p as isNotInternalHookName,
-  Ce as mixins
+  je as MixinCustomRender,
+  Pe as Vue,
+  ie as VueComponentBaseImpl,
+  te as addLegacyRenderingFunctions,
+  Ae as createDecorator,
+  _e as default,
+  le as isInternalHookName,
+  h as isNotInternalHookName,
+  $e as mixins
 };

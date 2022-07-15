@@ -4,10 +4,11 @@
  *
  * @see: https://github.com/vuejs/vue-class-component/blob/next/src/vue.ts
  */
-import type { ComponentPublicInstance, ComponentInternalInstance, MethodOptions, VNode, VNodeProps, AllowedComponentProps, ComponentCustomProps, ComponentOptionsBase, EmitsOptions, ObjectEmitsOptions, WatchOptions, WatchStopHandle } from "vue";
+import type { ComponentPublicInstance, ComponentInternalInstance, MethodOptions, VNode, VNodeProps, AllowedComponentProps, ComponentCustomProps, ComponentOptionsBase, EmitsOptions, ObjectEmitsOptions, SetupContext, WatchOptions, WatchStopHandle } from "vue";
 import type { ComponentWithCustomSetup } from "../decorator/component-decorator-types";
 import type { CompatibleComponentOptions } from "./legacy-component-options";
 import type { Constructor } from "./basic-types";
+import { h } from "vue";
 export declare type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
 export interface ClassComponentHooks {
     data?(): object;
@@ -21,7 +22,7 @@ export interface ClassComponentHooks {
     updated?(): void;
     activated?(): void;
     deactivated?(): void;
-    render?(): VNode | void;
+    render?(createElement: typeof h, ctx: SetupContext): VNode | void;
     errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined;
     serverPrefetch?(): Promise<unknown>;
 }
@@ -55,6 +56,11 @@ export declare class VueComponentBaseImpl implements VueBase {
      * </p>
      */
     readonly $: ComponentInternalInstance;
+    /**
+     * The setup context as passed to the setup function of this component, if created by a "setup" function.
+     */
+    readonly _setupContext?: SetupContext;
+    getSetupContext<E>(): SetupContext<E> | undefined;
     get $el(): import("vue").RendererNode;
     get $attrs(): {
         [x: string]: unknown;
