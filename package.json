@@ -11,6 +11,7 @@
     "build": "npm run build:lib && npm run build:types",
     "build:lib": "vue-tsc --noEmit && vite build",
     "build:types": "tsc src/index.ts --moduleResolution node  --target esnext --declaration --emitDeclarationOnly --outDir dist",
+    "ci": "npm run test",
     "commitlint": "commitlint --edit",
     "create:changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "dev": "vite",
