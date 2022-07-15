@@ -5,6 +5,7 @@
 import {
     computed,
     getCurrentInstance,
+    h,
     inject,
     onActivated,
     onBeforeMount,
@@ -30,6 +31,7 @@ import {
 export const CompositionApi = {
     computed,
     getCurrentInstance,
+    h,
     inject,
     onActivated,
     onBeforeMount,

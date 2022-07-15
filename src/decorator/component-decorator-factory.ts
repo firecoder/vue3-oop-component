@@ -24,7 +24,7 @@ import type {
     VueComponentSetupFunction,
 } from "./component-decorator-types";
 
-import { getCurrentInstance } from "vue";
+import { CompositionApi } from "../vue";
 import { getInstanceMethodsFromClass, getPropertyFromParentClassDefinition } from "../utilities/traverse-prototype";
 import { createProxyRedirectReads, defineNewLinkedProperties } from "../utilities/properties";
 import { generateMultiFunctionWrapper } from "../utilities/wrappers";
@@ -159,7 +159,13 @@ export function createVccOptions<V extends Vue = Vue>(
         enumerable: true,
     });
 
-    // render function is assigned later via SFC to this options
+    // render function is assigned later via SFC to this options. For non-SFC, link to "render" hook instead.
+    vccOpts.render = function customRenderHook(publicInstance: Vue) {
+        if (publicInstance && typeof publicInstance.render === "function") {
+            return publicInstance.render(CompositionApi.h, publicInstance._setupContext);
+        }
+    };
+
     return vccOpts;
 }
 
@@ -359,7 +365,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         setCurrentSetupContext(context);
 
         // get Vue 3 internal instance via global hook
-        const vueComponentInternalInstance = getCurrentInstance() || {
+        const vueComponentInternalInstance = CompositionApi.getCurrentInstance() || {
 
         } as ComponentInternalInstance;
 
