@@ -18,6 +18,9 @@ export type LegacyVNodeChildren =
     | VNodeArrayChildren
 ;
 
+// for legacy
+export type ScopedSlot = Function;
+
 export type Data = Record<string, unknown>;
 export type VNodeData = Data & VNodeProps;
 
@@ -46,7 +49,7 @@ export interface LegacyVNodeProps {
     // component only
     props?: Record<string, unknown>;
     slot?: string;
-    scopedSlots?: Record<string, Function>;
+    scopedSlots?: Record<string, ScopedSlot>;
     model?: {
         value: any;
         callback: (v: any) => void;
@@ -57,7 +60,7 @@ export interface LegacyVNodeProps {
 export type LegacyScopedSlotsData = Array<
     | {
         key: string
-        fn: Function
+        fn: ScopedSlot
       }
     | LegacyScopedSlotsData
 >
