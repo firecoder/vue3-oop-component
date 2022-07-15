@@ -17,6 +17,7 @@ import type {
     ComponentOptionsBase,
     EmitsOptions,
     ObjectEmitsOptions,
+    SetupContext,
     WatchOptions,
     WatchStopHandle,
 } from "vue";
@@ -27,11 +28,13 @@ import type { Constructor } from "./basic-types";
 
 import {
     getCurrentInstance,
+    h,
     nextTick,
     watch,
 } from "vue";
 import { defineNewLinkedProperties } from "../utilities/properties";
 import { addLegacyRenderingFunctions } from "./legacy-render-functions";
+import { getCurrentSetupContext } from "./setup-context-global-storage";
 
 export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
 
@@ -48,7 +51,7 @@ export interface ClassComponentHooks {
     updated?(): void
     activated?(): void
     deactivated?(): void
-    render?(): VNode | void
+    render?(createElement: typeof h, ctx: SetupContext): VNode | void;
     errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined
     serverPrefetch?(): Promise<unknown>
 }
@@ -101,11 +104,19 @@ export class VueComponentBaseImpl implements VueBase {
      */
     public constructor() {
         let vueInstance = getCurrentInstance();
+        let setupContext = getCurrentSetupContext();
 
         // use only getter and non-enumerable to avoid Vue to complain about reserved prefix "$".
         Object.defineProperty(this, "$", {
             get: () => vueInstance,
             set: (newValue) => { vueInstance = newValue; },
+            enumerable: false,
+            configurable: true,
+        });
+
+        Object.defineProperty(this, "_setupContext", {
+            get: () => setupContext,
+            set: (newValue) => { setupContext = newValue; },
             enumerable: false,
             configurable: true,
         });
@@ -124,6 +135,15 @@ export class VueComponentBaseImpl implements VueBase {
      * </p>
      */
     public readonly $!: ComponentInternalInstance;
+
+    /**
+     * The setup context as passed to the setup function of this component, if created by a "setup" function.
+     */
+    public readonly _setupContext?: SetupContext;
+
+    public getSetupContext<E>(): SetupContext<E> | undefined {
+        return this._setupContext as unknown as SetupContext<E>;
+    }
 
     // taken from here
     // https://github.com/vuejs/core/blob/bdffc143ef3aa27c347b22f19d0052194b54836e/packages/runtime-core/src/componentPublicInstance.ts#L226

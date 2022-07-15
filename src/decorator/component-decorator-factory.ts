@@ -30,6 +30,7 @@ import { createProxyRedirectReads, defineNewLinkedProperties } from "../utilitie
 import { generateMultiFunctionWrapper } from "../utilities/wrappers";
 import { $internalHookNames } from "./life-cycle-hooks";
 import { ComponentBuilderImpl } from "./ComponentBuilderImpl";
+import { clearCurrentSetupContext, setCurrentSetupContext } from "../vue/setup-context-global-storage";
 
 
 /**
@@ -354,6 +355,9 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
     return function setupClassComponent(
         this: void, properties: Record<string, unknown>, context: SetupContext,
     ): Vue {
+        // provide the context to the instance that will be created.
+        setCurrentSetupContext(context);
+
         // get Vue 3 internal instance via global hook
         const vueComponentInternalInstance = getCurrentInstance() || {
 
@@ -413,6 +417,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
             builder.instance.created();
         }
 
+        clearCurrentSetupContext();
         return builder.build();
     };
 }
