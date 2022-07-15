@@ -16,4 +16,4 @@ test
 .gitignore
 .idea
 .npmignore
-
+.github
