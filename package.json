@@ -58,6 +58,9 @@
     "vitest": "^0.18.0",
     "vue-tsc": "^0.38.5"
   },
+  "publishConfig": {
+    "@nexxar:registry": "https://npm.pkg.github.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/nros/vue3-typescript-compatibility"
