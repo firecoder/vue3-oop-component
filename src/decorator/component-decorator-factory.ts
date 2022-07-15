@@ -161,9 +161,10 @@ export function createVccOptions<V extends Vue = Vue>(
     });
 
     // render function is assigned later via SFC to this options. For non-SFC, link to "render" hook instead.
-    vccOpts.render = function customRenderHook(publicInstance: Vue) {
-        if (publicInstance && typeof publicInstance.render === "function") {
-            return publicInstance.render(CompositionApi.h, publicInstance._setupContext);
+    vccOpts.render = function customRenderHook(renderContext: { $?: { setupState?: Vue } }) {
+        const componentInstance = renderContext?.$?.setupState;
+        if (componentInstance && typeof componentInstance.render === "function") {
+            return componentInstance.render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
         }
     };
 
