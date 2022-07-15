@@ -17,6 +17,7 @@ export const BaseConfig: UserConfigExport = {
         },
     },
     build: {
+        minify: false,
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
             // package name is in kebab-case, for the name of the browser global, we want camelCase
