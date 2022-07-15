@@ -51,6 +51,7 @@ export interface VueClassComponent<V extends Vue = Vue> extends ComponentWithCus
      */
     __vccOpts: ComponentOptionsWithObjectProps<V> & {
         __component_decorator_original_options: CompatibleComponentOptions<V>,
+        __component_class?: VueClassComponent<V>,
     };
 
     /**

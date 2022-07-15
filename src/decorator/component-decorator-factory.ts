@@ -145,6 +145,7 @@ export function createVccOptions<V extends Vue = Vue>(
         name,
         setup: generateSetupFunction(component),
         __component_decorator_original_options: options,
+        __component_class: component,
     } as VueClassComponent<V>["__vccOpts"];
 
     Object.defineProperty(vccOpts, "props", {
@@ -389,6 +390,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         builder.rawInstance.$ = vueComponentInternalInstance;
         defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
         addLegacyRenderingFunctions(builder.rawInstance);
+        builder.rawInstance._setupContext = context;
 
         builder.registerLifeCycleHooks();
 
