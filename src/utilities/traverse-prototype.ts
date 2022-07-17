@@ -51,7 +51,7 @@ export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>
 }
 
 /**
- * Collects "static" property of all classes from the prototype chain.
+ * Collect a "static" property of parent classes, the top parent being first, immediate parent last.
  *
  * <p>
  *     "static" properties are not inherited down the prototype chain. Hence, this function helps to get a collection

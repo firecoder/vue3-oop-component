@@ -24,8 +24,12 @@ import type {
     VueComponentSetupFunction,
 } from "./component-decorator-types";
 
-import { addLegacyRenderingFunctions, CompositionApi } from "../vue";
-import { getInstanceMethodsFromClass, getPropertyFromParentClassDefinition } from "../utilities/traverse-prototype";
+import { addLegacyRenderingFunctions, CompositionApi, isVueClassInstance } from "../vue";
+import {
+    collectStaticPropertyFromPrototypeChain,
+    getInstanceMethodsFromClass,
+    getPropertyFromParentClassDefinition,
+} from "../utilities/traverse-prototype";
 import { createProxyRedirectReads, defineNewLinkedProperties } from "../utilities/properties";
 import { generateMultiFunctionWrapper } from "../utilities/wrappers";
 import { $internalHookNames } from "./life-cycle-hooks";
@@ -161,12 +165,72 @@ export function createVccOptions<V extends Vue = Vue>(
     });
 
     // render function is assigned later via SFC to this options. For non-SFC, link to "render" hook instead.
-    vccOpts.render = function customRenderHook(renderContext: { $?: { setupState?: Vue } }) {
-        const componentInstance = renderContext?.$?.setupState;
-        if (componentInstance && typeof componentInstance.render === "function") {
-            return componentInstance.render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
+    vccOpts.render = function customRenderHook(...args: unknown[]) {
+        // this heavily depends on Vue 3 internal data and render call convention and might break with changes there!
+        // find the true instance in the list of arguments
+        let componentInstance: Vue = (args || []).filter((arg) => isVueClassInstance(arg)).shift() as Vue || undefined;
+
+        if (!isVueClassInstance(componentInstance)) {
+            const renderContext = args[0] as ({ $?: { setupState?: Vue } } | undefined);
+            componentInstance = renderContext?.$?.setupState;
         }
-    };
+
+        if (isVueClassInstance(componentInstance)) {
+            // The component instance has been detected - hurray!
+
+            if (typeof componentInstance.render === "function") {
+                // try custom render hook on instance first
+                return componentInstance
+                    .render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
+
+            } else {
+                // find render function of any parent class.
+                // if a parent render function is called, a loop must be avoided. The parent´s function might itself
+                // try to find it´s parent function but will receive the very same context as this one. Hence, it would
+                // detect itself as the parent of the current context. So, a loop is very likely.
+                // Thus, a marker will be passed as last argument in the list to indicate such situations.
+
+                type VccOptsType = VueClassComponent["__vccOpts"];
+                type TStopParentLoopMarker = {
+                    isParentRenderFunctionCalled: true,
+                    remainingParentsToTry: VccOptsType[],
+                };
+
+                // remove last element from arg list, if it is the stop parent loop marker
+                const stopLoopMarker = (args[args.length-1] as TStopParentLoopMarker)?.isParentRenderFunctionCalled ?
+                    (args.pop() as TStopParentLoopMarker) : undefined;
+
+                let allVccOpts = stopLoopMarker?.remainingParentsToTry;
+                if (!Array.isArray(allVccOpts)) {
+                    // get render function of parent from the parent´s __vccOpts property. Stop, if there are no more.
+                    allVccOpts = collectStaticPropertyFromPrototypeChain<VccOptsType>(componentInstance, "__vccOpts");
+                    allVccOpts = (allVccOpts || []).filter((vccOpts) => typeof vccOpts?.render === "function");
+
+                    // top parent is first, so reverse to get immediate parent first
+                    allVccOpts.reverse();
+                }
+
+                // get the render function
+                const parentRenderFunction = (allVccOpts || [])
+                    .map((vccOpts) => vccOpts.render)
+                    .filter((renderFunc) => typeof renderFunc === "function")
+                    .shift()
+                ;
+
+                // calling parent render function
+                if (typeof parentRenderFunction === "function") {
+                    (allVccOpts || []).shift();
+
+                    return parentRenderFunction.apply(this, [...args, {
+                        isParentRenderFunctionCalled: true,
+                        remainingParentsToTry: (allVccOpts || []),
+                    } as TStopParentLoopMarker]);
+                }
+            }
+        } else {
+            // aborting - no vue class component
+        }
+    }; // customRenderHook function
 
     return vccOpts;
 }
