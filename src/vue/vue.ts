@@ -206,6 +206,9 @@ export class VueComponentBaseImpl implements VueBase {
         }
     }
 
+    /**
+     * A stub function for children, doing nothing here - a NOOP.
+     */
     public setup(): void {
         // do nothing special here. This is just a stub for child classes!
     }
