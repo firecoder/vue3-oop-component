@@ -57,7 +57,6 @@ export interface ClassComponentHooks {
 }
 
 export interface CustomClassImplementation {
-    [key: string]: undefined | null | unknown;
 }
 
 export type Vue<
