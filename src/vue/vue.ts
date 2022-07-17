@@ -219,4 +219,23 @@ export class VueComponentBaseImpl implements VueBase {
     }
 }
 
+/**
+ * Helper function to check, whether the provided instance is based on this Vue base class.
+ *
+ * <p>
+ *     This checks explicitly for a child (instanceof) the custom base class in this package. This check is not
+ *     a general check for any Vue 3 based component as this might not be based on this base class. This is an
+ *     intended feature!
+ * </p>
+ *
+ * @param instance the unknown instance to check
+ */
+export function isVueClassInstance(instance: unknown): instance is Vue {
+    return typeof instance === "object"
+        && instance !== null
+        && instance !== undefined
+        && instance instanceof Vue
+    ;
+}
+
 export const Vue: VueConstructor = VueComponentBaseImpl as VueConstructor;
