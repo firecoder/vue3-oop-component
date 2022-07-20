@@ -76,4 +76,64 @@ describe("Component():", () => {
 
         expect(wrapper.html()).to.contain("Hello World");
     });
+
+    describe("setup()",  () => {
+        it("returned render context does not contain '$' or '_' prefixed properties",  () => {
+
+            @Component({
+                props: ["message"],
+            })
+            class SimpleComponentClass extends Vue {
+                public message = "";
+                public printMessage() {
+                    return this.message;
+                }
+                public $func() {
+                    return "ignore this";
+                }
+            }
+
+            const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
+            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+            expect(instance).not.toHaveProperty("$func");
+        });
+
+        it("hidden property of instance - prefixed with '$' or '_' - is still accessible",  () => {
+            @Component({
+                props: ["message"],
+            })
+            class SimpleComponentClass extends Vue {
+                public message = "";
+                public $func() {
+                    return "ignore this";
+                }
+            }
+
+            const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
+            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+            expect(instance.$func).toBeTypeOf("function");
+        });
+
+        it("new property of instance is visible with 'in' operator",  () => {
+            @Component({
+                props: ["message"],
+            })
+            class SimpleComponentClass extends Vue {
+                public message = "";
+                public $func() {
+                    return "ignore this";
+                }
+            }
+
+            const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
+            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+
+            expect(Object.hasOwn(instance, "newProp")).toBeFalsy();
+
+            // define new property
+            instance.newProp = "Level 42";
+            expect(Object.hasOwn(instance, "newProp")).toBeTruthy();
+            expect("newProp" in instance).toBeTruthy();
+        });
+    });
 });

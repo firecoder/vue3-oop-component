@@ -241,4 +241,11 @@ export function isVueClassInstance(instance: unknown): instance is Vue {
     ;
 }
 
+// Vue does not want "render context"/"component external interface" to contain properties with internal
+// prefixes. So, ignore them.
+// see: https://github.com/vuejs/core/blob/8dcb6c7bbdd2905469e2bb11dfff27b58cc784b2/packages/runtime-core/src/componentPublicInstance.ts#L263
+export function isReservedPrefix(key: string | symbol) {
+    return typeof key === "string" && key && (key[0] === "_" || key[0] === "$");
+}
+
 export const Vue: VueConstructor = VueComponentBaseImpl as VueConstructor;
