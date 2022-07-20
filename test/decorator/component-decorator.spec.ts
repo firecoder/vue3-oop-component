@@ -9,7 +9,7 @@ import { mount } from "@vue/test-utils";
 import { Component } from "../../src";
 
 describe("Component():", () => {
-    it("prepares a simple class as Vue component", async () => {
+    it("prepares a simple class as Vue component",  () => {
 
         @Component({
             props: ["message"],
@@ -29,7 +29,7 @@ describe("Component():", () => {
         expect(instance.message).toEqual("Hello World!");
     });
 
-    it("decorator returns component class", async () => {
+    it("decorator returns component class",  () => {
         class SimpleComponentClass extends Vue {
             public message = "";
         }
@@ -47,7 +47,7 @@ describe("Component():", () => {
         expect(vccOptions.props).toBeTypeOf("object");
     });
 
-    it("SFC exported, decorated class component provides properties", async () => {
+    it("SFC exported, decorated class component provides properties",  () => {
         const ClassComponent = (MessageTextAsDecoratedClass as unknown as VueClassComponent["__vccOpts"]);
         expect(ClassComponent.render).not.toBeUndefined();
         expect(ClassComponent.render).toBeTypeOf("function");
@@ -63,7 +63,7 @@ describe("Component():", () => {
         expect(instance.message).toEqual("Hello World!");
     });
 
-    it("renders a simple class as Vue component", async () => {
+    it("renders a simple class as Vue component",  () => {
         const ClassComponent = (MessageTextAsDecoratedClass as unknown as VueClassComponent<Vue>["__vccOpts"]);
         const wrapper = mount(
             ClassComponent as ComponentOptionsWithObjectProps<MessageTextAsDecoratedClass>,
