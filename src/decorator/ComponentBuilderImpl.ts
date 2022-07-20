@@ -459,6 +459,17 @@ function createVueRenderContext<T extends Vue>(instance: T, reactiveProxy: Unwra
         const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance as AnyClass<T>);
 
         return new Proxy(reactiveProxy, {
+            get(target: Record<string | symbol, unknown>, key: string | symbol): any {
+                const value = target[key];
+                // if the value is a function, bind "this" context to the target. Vue does not do this on the
+                // render context created from this proxy.
+                if (typeof value === "function") {
+                    return value.bind(target);
+                } else {
+                    return value;
+                }
+            },
+
             getOwnPropertyDescriptor(target: object, key: string | symbol): PropertyDescriptor | undefined {
                 // ignore reserved Vue properties
                 if (isReservedPrefix(key)) {

@@ -135,5 +135,22 @@ describe("Component():", () => {
             expect(Object.hasOwn(instance, "newProp")).toBeTruthy();
             expect("newProp" in instance).toBeTruthy();
         });
+
+        it("returned methods have `this` context bound",  () => {
+            @Component({
+                props: ["message"],
+            })
+            class SimpleComponentClass extends Vue {
+                public message = "TEST";
+                public testFunc() {
+                    return this.message;
+                }
+            }
+
+            const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
+            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+            expect(instance.testFunc).toBeTypeOf("function");
+            expect(instance.testFunc.call(undefined)).toEqual("Hello World!");
+        });
     });
 });
