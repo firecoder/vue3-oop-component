@@ -239,6 +239,12 @@ class VueComponentBaseImpl {
     return [];
   }
 }
+function isVueClassInstance(instance) {
+  return typeof instance === "object" && instance !== null && instance !== void 0 && instance instanceof Vue;
+}
+function isReservedPrefix(key) {
+  return typeof key === "string" && key && (key[0] === "_" || key[0] === "$");
+}
 const Vue = VueComponentBaseImpl;
 function toClass(clazz) {
   if (!(clazz instanceof Function) && clazz instanceof Object) {
@@ -247,13 +253,14 @@ function toClass(clazz) {
     return clazz;
   }
 }
-function getAllBaseClasses(clazz) {
+function getAllBaseClasses(clazz, includeThisClass) {
   if (!clazz) {
     return [];
   }
+  includeThisClass = !!includeThisClass;
   const collectedClasses = [];
-  clazz = toClass(clazz);
-  let parentClass = Object.getPrototypeOf(clazz);
+  const childClass = toClass(clazz);
+  let parentClass = Object.getPrototypeOf(childClass);
   while (parentClass) {
     collectedClasses.push(parentClass);
     parentClass = Object.getPrototypeOf(parentClass);
@@ -261,23 +268,22 @@ function getAllBaseClasses(clazz) {
   collectedClasses.pop();
   collectedClasses.pop();
   collectedClasses.reverse();
+  if (includeThisClass) {
+    collectedClasses.push(childClass);
+  }
   return collectedClasses;
 }
 function collectStaticPropertyFromPrototypeChain(clazz, property) {
   if (!clazz || !property) {
     return [];
   }
-  const collectedProperties = (getAllBaseClasses(clazz) || []).filter((parentClass) => Object.hasOwn(parentClass, property)).map((parentClass) => parentClass[property]);
-  if (Object.hasOwn(clazz, property)) {
-    collectedProperties.push(clazz[property]);
-  }
-  return collectedProperties;
+  return (getAllBaseClasses(clazz, true) || []).filter((parentClass) => Object.hasOwn(parentClass, property)).map((parentClass) => parentClass[property]);
 }
 function getPropertyFromParentClassDefinition(clazz, property) {
   if (!clazz) {
     return void 0;
   }
-  const allParentClasses = getAllBaseClasses(clazz);
+  const allParentClasses = getAllBaseClasses(clazz, false);
   allParentClasses.reverse();
   for (const parentClass of allParentClasses) {
     const parentClassDefinition = parentClass.prototype;
@@ -290,10 +296,9 @@ function getPropertyFromParentClassDefinition(clazz, property) {
 function getInstanceMethodsFromClass(clazz) {
   const allMethods = {};
   if (!clazz) {
-    return {};
+    return allMethods;
   }
-  const allClasses = getAllBaseClasses(clazz);
-  allClasses.push(toClass(clazz));
+  const allClasses = getAllBaseClasses(clazz, true);
   allClasses.reverse();
   for (const parentClass of allClasses) {
     const parentClassDefinition = parentClass.prototype;
@@ -305,6 +310,19 @@ function getInstanceMethodsFromClass(clazz) {
     });
   }
   return allMethods;
+}
+function getAllInheritedPropertiesFromPrototypeChain(instance) {
+  const allProperties = {};
+  if (!instance) {
+    return allProperties;
+  }
+  const allClasses = getAllBaseClasses(instance, true);
+  for (const parentClass of allClasses) {
+    const parentClassDefinition = Object.getOwnPropertyDescriptors(parentClass.prototype);
+    delete parentClassDefinition["constructor"];
+    Object.assign(allProperties, parentClassDefinition);
+  }
+  return allProperties;
 }
 function generateMultiFunctionWrapper(...wrappedFunctions) {
   wrappedFunctions = (wrappedFunctions || []).filter((func) => func && typeof func === "function");
@@ -438,7 +456,7 @@ class ComponentBuilderImpl {
     }
     this._hasBeenFinalised = true;
     this._createAllWatchers();
-    return this.reactiveWrapper;
+    return createVueRenderContext(this.rawInstance, this.reactiveWrapper);
   }
   applyDataValues(dataValues) {
     this._checkValidInstanceAndThrowError();
@@ -641,6 +659,36 @@ class ComponentBuilderImpl {
     }
   }
 }
+function createVueRenderContext(instance, reactiveProxy) {
+  if (typeof instance === "object") {
+    const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance);
+    return new Proxy(reactiveProxy, {
+      get(target, key) {
+        const value = target[key];
+        if (typeof value === "function") {
+          return value.bind(target);
+        } else {
+          return value;
+        }
+      },
+      getOwnPropertyDescriptor(target, key) {
+        var _a;
+        if (isReservedPrefix(key)) {
+          return void 0;
+        }
+        return (_a = Object.getOwnPropertyDescriptor(target, key)) != null ? _a : Object.getOwnPropertyDescriptor(inheritedProperties, key);
+      },
+      has(target, key) {
+        return !isReservedPrefix(key) && (key in target || key in inheritedProperties);
+      },
+      ownKeys(target) {
+        return [].concat(Object.getOwnPropertyNames(target)).concat(Object.getOwnPropertySymbols(target)).concat(Object.getOwnPropertyNames(inheritedProperties)).concat(Object.getOwnPropertySymbols(inheritedProperties)).filter((key) => !isReservedPrefix(key));
+      }
+    });
+  } else {
+    throw new Error("Cannot create a proxy of a non-object instance!");
+  }
+}
 function componentFactory(component, options = {}) {
   options = options || {};
   const computedProperties = getComputedValuesDefinitionFromComponentPrototype(component);
@@ -698,11 +746,33 @@ function createVccOptions(component, options = {}) {
     configurable: true,
     enumerable: true
   });
-  vccOpts.render = function customRenderHook(renderContext) {
-    var _a;
-    const componentInstance = (_a = renderContext == null ? void 0 : renderContext.$) == null ? void 0 : _a.setupState;
-    if (componentInstance && typeof componentInstance.render === "function") {
-      return componentInstance.render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
+  vccOpts.render = function customRenderHook(...args) {
+    var _a, _b;
+    let componentInstance = (args || []).filter((arg) => isVueClassInstance(arg)).shift() || void 0;
+    if (!isVueClassInstance(componentInstance)) {
+      const renderContext = args[0];
+      componentInstance = (_a = renderContext == null ? void 0 : renderContext.$) == null ? void 0 : _a.setupState;
+    }
+    if (isVueClassInstance(componentInstance)) {
+      if (typeof componentInstance.render === "function") {
+        return componentInstance.render.call(componentInstance, CompositionApi.h, componentInstance._setupContext);
+      } else {
+        const stopLoopMarker = ((_b = args[args.length - 1]) == null ? void 0 : _b.isParentRenderFunctionCalled) ? args.pop() : void 0;
+        let allVccOpts = stopLoopMarker == null ? void 0 : stopLoopMarker.remainingParentsToTry;
+        if (!Array.isArray(allVccOpts)) {
+          allVccOpts = collectStaticPropertyFromPrototypeChain(componentInstance, "__vccOpts");
+          allVccOpts = (allVccOpts || []).filter((vccOpts2) => typeof (vccOpts2 == null ? void 0 : vccOpts2.render) === "function");
+          allVccOpts.reverse();
+        }
+        const parentRenderFunction = (allVccOpts || []).map((vccOpts2) => vccOpts2.render).filter((renderFunc) => typeof renderFunc === "function").shift();
+        if (typeof parentRenderFunction === "function") {
+          (allVccOpts || []).shift();
+          return parentRenderFunction.apply(this, [...args, {
+            isParentRenderFunctionCalled: true,
+            remainingParentsToTry: allVccOpts || []
+          }]);
+        }
+      }
     }
   };
   return vccOpts;
@@ -858,5 +928,7 @@ export {
   Component as default,
   isInternalHookName,
   isNotInternalHookName,
+  isReservedPrefix,
+  isVueClassInstance,
   mixins
 };

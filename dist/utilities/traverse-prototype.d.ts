@@ -9,10 +9,12 @@ export declare function toClass<C>(clazz: AnyClass<C> | AnyInstance<C>): AnyClas
  * Returns a list of all base classes of the provided class.
  *
  * @param clazz the class to collect all base classes
+ * @param includeThisClass (optional) if <code>true</code>, the provided class in <code>clazz</code> is added to the
+ *     list, too.
  */
-export declare function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>[];
+export declare function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance, includeThisClass?: boolean): AnyClass<T>[];
 /**
- * Collects "static" property of all classes from the prototype chain.
+ * Collect a "static" property of parent classes, the top parent being first, immediate parent last.
  *
  * <p>
  *     "static" properties are not inherited down the prototype chain. Hence, this function helps to get a collection
@@ -54,3 +56,17 @@ export declare function getPropertyFromParentClassDefinition<T>(clazz: AnyClass 
  * @param clazz the check and its parents .
  */
 export declare function getInstanceMethodsFromClass(clazz: AnyClass | AnyInstance): Record<string | symbol, Function>;
+/**
+ * Get the property descriptors for all (inherited) properties in the prototype chain.
+ *
+ * @param instance the instance to read all inherited properties for. If it is a class, all properties of this class
+ *     that will be inherited to an instance are included, too.
+ */
+export declare function getAllInheritedPropertiesFromPrototypeChain(instance: AnyClass | AnyInstance): Record<string | symbol, PropertyDescriptor>;
+/**
+ * Get the keys of all current and inherited properties of the provided class.
+ *
+ * @param instance the instance to read all inherited properties for. If it is a class, all properties of this class
+ *     that will be inherited to an instance are included, too.
+ */
+export declare function getAllInheritedPropertyKeys(instance: AnyClass | AnyInstance): (string | symbol)[];

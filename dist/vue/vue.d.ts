@@ -27,7 +27,6 @@ export interface ClassComponentHooks {
     serverPrefetch?(): Promise<unknown>;
 }
 export interface CustomClassImplementation {
-    [key: string]: undefined | null | unknown;
 }
 export declare type Vue<Props = any, Emits extends EmitsOptions = ObjectEmitsOptions, DefaultProps = Record<string, any>> = ComponentPublicInstance<Props, Record<string, any>, Record<string, any>, Record<string, any>, MethodOptions, Emits, PublicProps, DefaultProps, true> & ClassComponentHooks & CustomClassImplementation & ComponentWithCustomSetup;
 export declare type VueBase = Vue<any, string[]>;
@@ -84,6 +83,9 @@ export declare class VueComponentBaseImpl implements VueBase {
         [name: string]: import("vue").Slot;
     };
     $watch(source: string | ((...args: unknown[]) => void), cb: ((...args: unknown[]) => void), options: WatchOptions | undefined): WatchStopHandle;
+    /**
+     * A stub function for children, doing nothing here - a NOOP.
+     */
     setup(): void;
     /**
      * This is used internally by the component decorator.
@@ -91,4 +93,17 @@ export declare class VueComponentBaseImpl implements VueBase {
      */
     protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueComponentBaseImpl>[];
 }
+/**
+ * Helper function to check, whether the provided instance is based on this Vue base class.
+ *
+ * <p>
+ *     This checks explicitly for a child (instanceof) the custom base class in this package. This check is not
+ *     a general check for any Vue 3 based component as this might not be based on this base class. This is an
+ *     intended feature!
+ * </p>
+ *
+ * @param instance the unknown instance to check
+ */
+export declare function isVueClassInstance(instance: unknown): instance is Vue;
+export declare function isReservedPrefix(key: string | symbol): boolean;
 export declare const Vue: VueConstructor;
