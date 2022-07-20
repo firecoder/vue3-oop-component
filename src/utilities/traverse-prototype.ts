@@ -23,20 +23,23 @@ export function toClass<C>(clazz: AnyClass<C> | AnyInstance<C>): AnyClass<C> {
  * Returns a list of all base classes of the provided class.
  *
  * @param clazz the class to collect all base classes
+ * @param includeThisClass (optional) if <code>true</code>, the provided class in <code>clazz</code> is added to the
+ *     list, too.
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>[] {
+export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance, includeThisClass?: boolean): AnyClass<T>[] {
     if (!clazz) {
         return [];
     }
+
+    includeThisClass = !!includeThisClass;
 
     // traverse to the top parent
     const collectedClasses: AnyClass<T>[] = [ ];
 
     // if "clazz" is an instance, then get the class definition of it
-    clazz = toClass(clazz);
+    const childClass = toClass(clazz);
 
-    let parentClass = Object.getPrototypeOf(clazz);
+    let parentClass = Object.getPrototypeOf(childClass);
     while (parentClass) {
         collectedClasses.push(parentClass);
         parentClass = Object.getPrototypeOf(parentClass);
@@ -47,6 +50,11 @@ export function getAllBaseClasses<T>(clazz: AnyClass | AnyInstance): AnyClass<T>
     collectedClasses.pop();
 
     collectedClasses.reverse();
+
+    if (includeThisClass) {
+        collectedClasses.push(childClass);
+    }
+
     return collectedClasses;
 }
 
@@ -71,16 +79,10 @@ export function collectStaticPropertyFromPrototypeChain<T>(
         return [];
     }
 
-    const collectedProperties: T[] = (getAllBaseClasses(clazz) || [])
+    return (getAllBaseClasses(clazz, true) || [])
         .filter((parentClass) => Object.hasOwn(parentClass, property))
         .map((parentClass) => parentClass[property] as T)
     ;
-
-    if (Object.hasOwn(clazz, property)) {
-        collectedProperties.push(clazz[property] as T);
-    }
-
-    return collectedProperties;
 }
 
 
@@ -120,7 +122,7 @@ export function getPropertyFromParentClassDefinition<T>(
         return undefined;
     }
 
-    const allParentClasses = getAllBaseClasses(clazz);
+    const allParentClasses = getAllBaseClasses(clazz, false);
     allParentClasses.reverse(); // because list starts with top class, not with immediate parent
 
     for (const parentClass of allParentClasses) {
@@ -152,8 +154,7 @@ export function getInstanceMethodsFromClass(clazz: AnyClass | AnyInstance): Reco
         return {};
     }
 
-    const allClasses = getAllBaseClasses(clazz);
-    allClasses.push(toClass(clazz));
+    const allClasses = getAllBaseClasses(clazz, true);
     allClasses.reverse(); // because list starts with top class, not with immediate parent
 
     for (const parentClass of allClasses) {
