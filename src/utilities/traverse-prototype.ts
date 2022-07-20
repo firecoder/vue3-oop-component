@@ -172,3 +172,46 @@ export function getInstanceMethodsFromClass(clazz: AnyClass | AnyInstance): Reco
 
     return allMethods;
 }
+
+/**
+ * Get the property descriptors for all (inherited) properties in the prototype chain.
+ *
+ * @param instance the instance to read all inherited properties for. If it is a class, all properties of this class
+ *     that will be inherited to an instance are included, too.
+ */
+export function getAllInheritedPropertiesFromPrototypeChain(
+    instance: AnyClass | AnyInstance,
+): Record<string | symbol, PropertyDescriptor> {
+    const allProperties = {} as Record<string | symbol, PropertyDescriptor>;
+    if (!instance) {
+        return allProperties;
+    }
+
+    const allClasses = getAllBaseClasses(instance, true);
+
+    for (const parentClass of allClasses) {
+        const parentClassDefinition = Object.getOwnPropertyDescriptors(parentClass.prototype);
+
+        // remove constructor property, as this is the class constructor function and (A) always available with a class
+        // and (B) not copyable to a flat clone.
+        delete parentClassDefinition["constructor"];
+
+        Object.assign(allProperties, parentClassDefinition);
+    }
+
+    return allProperties;
+}
+
+/**
+ * Get the keys of all current and inherited properties of the provided class.
+ *
+ * @param instance the instance to read all inherited properties for. If it is a class, all properties of this class
+ *     that will be inherited to an instance are included, too.
+ */
+export function getAllInheritedPropertyKeys(instance: AnyClass | AnyInstance): (string | symbol)[] {
+    const allProperties = getAllInheritedPropertiesFromPrototypeChain(instance);
+    return ([] as (string | symbol)[])
+        .concat(Object.getOwnPropertyNames(allProperties))
+        .concat(Object.getOwnPropertySymbols(allProperties))
+    ;
+}
