@@ -151,7 +151,7 @@ export function getInstanceMethodsFromClass(clazz: AnyClass | AnyInstance): Reco
     // eslint-disable-next-line @typescript-eslint/ban-types
     const allMethods = {} as Record<string | symbol, Function>;
     if (!clazz) {
-        return {};
+        return allMethods;
     }
 
     const allClasses = getAllBaseClasses(clazz, true);
