@@ -33,11 +33,11 @@ function createReferenceSetterFunc(reference: Ref) {
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
     private _component?: VueClassComponent<T>;
     private _hasBeenFinalised = false;
-    private _rawInstance?: T & Vue;
-    private _reactiveWrapper?: UnwrapNestedRefs<T & Vue>;
+    private _rawInstance?: T;
+    private _reactiveWrapper?: UnwrapNestedRefs<T>;
     private _watchersToCreate: CompatibleComponentOptions<Vue>["watch"][] = [];
 
-    public constructor(instanceOrClass?: ((T & Vue) | VueClassComponent<T>)) {
+    public constructor(instanceOrClass?: (T | VueClassComponent<T>)) {
         if (typeof instanceOrClass === "function") {
             this.setComponentClass(instanceOrClass);
 
@@ -87,7 +87,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public build(): T {
+    public build(): Vue & T {
         this._checkValidInstanceAndThrowError();
 
         if (this._hasBeenFinalised) {

@@ -8,7 +8,7 @@ import type {
     VNode,
     VNodeArrayChildren,
 } from "vue";
-import type { VueClass }  from "./vue";
+import type { VueClass, Vue }  from "./vue";
 
 export type LegacyVNodeChildren =
     | string
@@ -251,6 +251,6 @@ export function addLegacyRenderingFunctions<V>(vue: V): V & VueLegacyRenderFunct
  * @param componentClass
  * @constructor
  */
-export function MixinCustomRender<A>(componentClass: VueClass<A>): VueClass<A> & VueLegacyRenderFunctions {
+export function MixinCustomRender<A extends Vue>(componentClass: VueClass<A>): VueClass<A> & VueLegacyRenderFunctions {
     return componentClass as VueClass<A> & VueLegacyRenderFunctions;
 }

@@ -62,7 +62,7 @@ export interface IComponentBuilder<T extends Vue> {
      *     custom {@code setup} functions must not call this!
      * </p>
      */
-    build(): T;
+    build(): Vue & T;
 
     /**
      * Uses the defined data and created properties on the instance with the defined name and the value.
@@ -180,5 +180,5 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param watchers the watchers to define
      */
-    watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T>;
+    watcherForPropertyChange(watchers?: CompatibleComponentOptions<T>["watch"]): IComponentBuilder<T>;
 }

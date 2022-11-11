@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
 // to be as compatible as possible with legacy Vue 2, the code is taken from there.
 // see: https://github.com/vuejs/vue/blob/d6bdff890322bc87792094a1690bcd16373cf82d/types/options.d.ts
 
@@ -7,6 +8,9 @@ import type {
     ComponentInternalInstance,
     ComponentProvideOptions,
     ComponentOptionsBase,
+    ComponentPropsOptions,
+    ComputedOptions,
+    ExtractDefaultPropTypes,
     SetupContext,
     VNode,
 } from "vue";
@@ -17,26 +21,25 @@ import type {
     ComponentWatchOptions,
     DebuggerHook,
     DefaultComputed,
-    DefaultData,
     DefaultMethods,
-    DefaultProps,
     ErrorCapturedHook,
     MethodsWithoutThis,
-    PropsDefinition,
 } from "./basic-types";
 import type { IComponentBuilder } from "../decorator/IComponentBuilder";
 
 
 export interface CompatibleComponentOptions<
     V extends Vue,
-    Data = DefaultData<V>,
-    Methods = DefaultMethods<V>,
-    Computed = DefaultComputed,
-    PropsDef = PropsDefinition<DefaultProps>,
-    Props = DefaultProps,
-> extends Omit<ComponentOptionsBase<Props, V, Data, Accessors<Computed>, MethodsWithoutThis<Methods>, any, any, any>, "setup"> {
-    data?: Data;
-    props?: PropsDef;
+    Props extends ComponentPropsOptions = ComponentPropsOptions,
+    DefaultProps extends ExtractDefaultPropTypes<Props> = ExtractDefaultPropTypes<Props>,
+    Methods extends DefaultMethods<V> = DefaultMethods<V>,
+    Computed extends ComputedOptions = DefaultComputed,
+> extends Omit<
+    ComponentOptionsBase<Props, V, DefaultProps, Accessors<Computed>, MethodsWithoutThis<Methods>, any, any, any>,
+    "setup"
+> {
+    data?: DefaultProps;
+    props?: Props;
     methods?: Methods;
 
     /**

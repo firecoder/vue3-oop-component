@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-types */
+// noinspection JSUnusedGlobalSymbols
+
 /**
  * This file is inspired by package "vue-class-component". Its content is partly taken from there and adapted to the needs
  * of this package.
@@ -9,20 +12,19 @@
 import type {
     ComponentPublicInstance,
     ComponentInternalInstance,
-    MethodOptions,
+    DefineComponent,
     VNode,
     VNodeProps,
     AllowedComponentProps,
     ComponentCustomProps,
     ComponentOptionsBase,
-    EmitsOptions,
-    ObjectEmitsOptions,
+    ComponentPropsOptions,
+    CreateComponentPublicInstance,
     SetupContext,
     WatchOptions,
     WatchStopHandle,
 } from "vue";
 
-import type { ComponentWithCustomSetup } from "../decorator/component-decorator-types";
 import type { CompatibleComponentOptions } from "./legacy-component-options";
 import type { Constructor } from "./basic-types";
 
@@ -56,27 +58,15 @@ export interface ClassComponentHooks {
     serverPrefetch?(): Promise<unknown>;
 }
 
-export interface CustomClassImplementation {
-}
 
-export type Vue<
-    Props = any,
-    Emits extends EmitsOptions = ObjectEmitsOptions,
-    DefaultProps = Record<string, any>
-> = ComponentPublicInstance<
-    Props,
-    Record<string, any>,
-    Record<string, any>,
-    Record<string, any>,
-    MethodOptions,
-    Emits,
-    PublicProps,
-    DefaultProps,
-    true
-> & ClassComponentHooks & CustomClassImplementation & ComponentWithCustomSetup;
+export type Vue<Props extends ComponentPropsOptions = any> =
+    CreateComponentPublicInstance<Props>
+    & ClassComponentHooks
+;
 
 // change to never
-export type VueBase = Vue<any, string[]>;
+export type VueBase = Vue;
+
 
 // unlike vue´s vue-class-component, no internal of VueStatic is exposed by default. VueStatic is regarded as
 // internal and unstable API. Maybe this API change with next major version like with Vue2 to Vue3.
@@ -85,9 +75,10 @@ export type VueBase = Vue<any, string[]>;
 export type VueConstructor<V extends Vue = VueBase> = Constructor<V>;
 
 // for compatibility with Vue 2
-export type VueClass<V extends Vue> = VueConstructor<V>;
+export type VueClass<V extends Vue = VueBase> = Omit<DefineComponent<{}, V>, "setup"> & VueConstructor<V>;
 
-type IndexableReturnsAny<T> = T & { [key: string]: any };
+
+export type IndexableReturnsAny<T> = Record<string | symbol, unknown> & T;
 
 /**
  * This is the base implementation of class component instances implementing interface {@code Vue}.
@@ -200,7 +191,7 @@ export class VueComponentBaseImpl implements VueBase {
         options: WatchOptions | undefined,
     ): WatchStopHandle {
         if (typeof source === "string") {
-            return watch(() => (this as IndexableReturnsAny<VueComponentBaseImpl>)[source] as unknown, cb, options);
+            return watch(() => (this as unknown as IndexableReturnsAny<VueComponentBaseImpl>)[source] as unknown, cb, options);
         } else {
             return watch(source, cb, options);
         }
@@ -217,7 +208,7 @@ export class VueComponentBaseImpl implements VueBase {
      * This is used internally by the component decorator.
      * @private
      */
-    protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueComponentBaseImpl>[] {
+    protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueBase>[] {
         return [];
     }
 }
@@ -248,4 +239,4 @@ export function isReservedPrefix(key: string | symbol) {
     return typeof key === "string" && key && (key[0] === "_" || key[0] === "$");
 }
 
-export const Vue: VueConstructor = VueComponentBaseImpl as VueConstructor;
+export const Vue = VueComponentBaseImpl as Vue & VueComponentBaseImpl & VueConstructor;

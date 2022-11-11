@@ -15,7 +15,7 @@ import { componentFactory } from "./component-decorator-factory";
  * @param options (optional) options to use to prepare the class.
  * @constructor the class to prepare as Vue component.
  */
-function Component<V extends Vue>(
+function Component<V extends Vue = Vue>(
     options: CompatibleComponentOptions<V> & ThisType<V>,
 ): <VC extends VueClass<V>>(target: VC) => VC & VueClassComponent<V>;
 
@@ -28,7 +28,7 @@ function Component(options: ComponentWithCustomSetup | CompatibleComponentOption
     }
 
     // options are provided, a TypeScript decorator function must be returned.
-    return function ComponentDecorator(Component: VueClass<Vue>) {
+    return function ComponentDecorator(Component: VueClass<V>) {
         return componentFactory(Component, options);
     };
 }

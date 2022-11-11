@@ -1,3 +1,4 @@
+import type { Vue } from "../vue/vue";
 import { isReactive, reactive, toRaw, unref } from "vue";
 
 /**
@@ -12,7 +13,7 @@ import { isReactive, reactive, toRaw, unref } from "vue";
  * @param instance the instance to apply the new properties
  * @param newProperties a reactive object providing all the properties to define and link to.
  */
-export function defineNewLinkedProperties<T extends object>(
+export function defineNewLinkedProperties<T extends Vue>(
     instance: T, newProperties?: Record<string | symbol, unknown>,
 ): T {
     if (typeof instance === "undefined" || typeof newProperties === "undefined") {

@@ -29,7 +29,7 @@ export type Accessors<T> = {
     [K in keyof T]: (() => T[K]) | ComputedOptions<T[K]>
 }
 
-export type DefaultData<V> = object | ((this: V) => object);
+export type DefaultData<V> = Record<string, unknown> | ((this: V) => Record<string, unknown>);
 export type DefaultProps = Record<string, any> | string[];
 export type DefaultMethods<V> = { [key: string]: (this: V, ...args: any[]) => any };
 export type DefaultComputed = { [key: string | symbol]: any };
@@ -61,8 +61,8 @@ export interface PropOptions<T = any> {
 export type RecordPropsDefinition<T> = {
     [K in keyof T]: PropValidator<T[K]>
 };
-export type ArrayPropsDefinition<T> = (keyof T)[];
-export type PropsDefinition<T> =
+export type ArrayPropsDefinition<T extends Record<string, unknown>> = (string & keyof T)[];
+export type PropsDefinition<T extends Record<string, any>> =
     | string[]
     | ArrayPropsDefinition<T>
     | RecordPropsDefinition<T>

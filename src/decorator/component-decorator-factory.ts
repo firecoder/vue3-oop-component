@@ -64,11 +64,11 @@ export function componentFactory<V extends Vue = Vue>(
 ): VueClassComponent<V> {
     options = options || {};
 
-    const computedProperties = getComputedValuesDefinitionFromComponentPrototype(component);
+    const computedProperties = getComputedValuesDefinitionFromComponentPrototype<V>(component);
     options.computed = Object.assign({}, computedProperties, options.computed);
 
     // read all the options from the decorators
-    const decorators = (component as DecoratedClass).__decorators__;
+    const decorators = (component as DecoratedClass<V>).__decorators__;
     if (decorators && decorators.length > 0) {
         // some decorators, like vue-debounce-decorator need access to the component methods, to replace them.
         const originalMethods = options.methods || {};
@@ -82,7 +82,7 @@ export function componentFactory<V extends Vue = Vue>(
     }
 
     // applying methods to the class itself makes them inheritable to child classes.
-    applyMethodsFromOptions(component, options);
+    applyMethodsFromOptions<V>(component, options);
 
     const classComponent = (component as VueClassComponent<V>);
     if (typeof options.beforeCreate === "function") {
@@ -254,9 +254,9 @@ export function createVccOptions<V extends Vue = Vue>(
  *
  * @param component
  */
-export function getComputedValuesDefinitionFromComponentPrototype(
-    component: ComponentWithCustomSetup,
-): CompatibleComponentOptions<Vue>["computed"] {
+export function getComputedValuesDefinitionFromComponentPrototype<V extends Vue = Vue>(
+    component: ComponentWithCustomSetup<V>,
+): CompatibleComponentOptions<V>["computed"] {
     const allComputedValues = {} as CompatibleComponentOptions<Vue>["computed"];
 
     // get all prototype props to retrieve computed values
@@ -310,10 +310,10 @@ export function getComputedValuesDefinitionFromComponentPrototype(
  * @param component
  * @param options the decorator options passed-in
  */
-export function applyMethodsFromOptions(
-    component: ComponentWithCustomSetup,
-    options: CompatibleComponentOptions<Vue>,
-): ComponentWithCustomSetup {
+export function applyMethodsFromOptions<V extends Vue = Vue>(
+    component: ComponentWithCustomSetup<V>,
+    options: CompatibleComponentOptions<V>,
+): ComponentWithCustomSetup<V> {
     // add the additional methods to the component class
     const proto = component.prototype;
     Object.getOwnPropertyNames(options?.methods || {})
@@ -350,7 +350,7 @@ export function applyMethodsFromOptions(
  * @param component the component to instantiate and read its options.
  */
 export function generateGetterForProperties<V extends Vue = Vue>(
-    component: ComponentWithCustomSetup<V>,
+    component: VueClassComponent<V>,
 ): (() => RecordPropsDefinition<DefaultProps>) {
     // TODO: make this work with mixins
     const propertiesDefinition: RecordPropsDefinition<DefaultProps> = {};
@@ -387,7 +387,7 @@ export function generateGetterForProperties<V extends Vue = Vue>(
  * @param component the component to instantiate and read its options.
  */
 export function generateGetterForComponents<V extends Vue = Vue>(
-    component: ComponentWithCustomSetup<V>,
+    component: VueClassComponent<V>,
 ): (() => Record<string, Component>) {
     // TODO: make this work with mixins
     const importedComponents: Record<string, Component> = {};
