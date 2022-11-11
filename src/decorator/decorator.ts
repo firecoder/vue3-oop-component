@@ -61,14 +61,20 @@ export function createDecorator(
             : target.constructor as DecoratedClass
         ;
 
-        if (!ConstructorFunc.__decorators__) {
-            ConstructorFunc.__decorators__ = [];
+        if (!Object.hasOwn(ConstructorFunc, "__decorators__") || !ConstructorFunc.__decorators__) {
+            Object.defineProperty(ConstructorFunc, "__decorators__", {
+                enumerable: true,
+                value: [],
+                writable: true,
+            });
         }
 
         if (typeof index !== "number") {
             index = undefined;
         }
 
-        ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
+        if (ConstructorFunc.__decorators__ !== undefined) {
+            ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
+        }
     };
 }
