@@ -25,8 +25,7 @@ function Component<V extends Vue = Vue>(
 ): ((Component: VueClass<V>) => VueClassComponent<V>) | VueClassComponent<V> {
     // the decorator is used without options directly as decorator function
     if (typeof options === "function") {
-        const Component = options;
-        return componentFactory(Component);
+        return componentFactory(options);
     }
 
     // options are provided, a TypeScript decorator function must be returned.
