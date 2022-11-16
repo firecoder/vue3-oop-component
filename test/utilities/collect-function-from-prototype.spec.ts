@@ -136,7 +136,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
         class BaseClass2a extends BaseClass1 { }
         class TestClass extends BaseClass2a { }
 
-        (BaseClass1 as unknown as Record<string, any>).testFunction = function testFunction() {
+        (BaseClass1 as unknown as Record<string, unknown>).testFunction = function testFunction() {
             return "test2";
         };
 
@@ -152,11 +152,11 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
         class BaseClass2a extends BaseClass1 { }
         class TestClass extends BaseClass2a { }
 
-        (BaseClass1 as unknown as Record<string, any>).testFunction = function testFunction() {
+        (BaseClass1 as unknown as Record<string, unknown>).testFunction = function testFunction() {
             return "test1";
         };
 
-        (BaseClass2a as unknown as Record<string, any>).testFunction = function testFunction() {
+        (BaseClass2a as unknown as Record<string, unknown>).testFunction = function testFunction() {
             return "test2a";
         };
 

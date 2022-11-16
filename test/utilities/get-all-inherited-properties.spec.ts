@@ -56,7 +56,7 @@ describe("getAllInheritedPropertiesFromPrototypeChain", () => {
             }
         }
 
-        (TestClass.prototype as any).someProp = "some property";
+        (TestClass.prototype as unknown as { someProp: string }).someProp = "some property";
 
         const allProperties = getAllInheritedPropertiesFromPrototypeChain(TestClass);
         const allPropertyKeys = ([] as PropertyKey[])
@@ -71,7 +71,7 @@ describe("getAllInheritedPropertiesFromPrototypeChain", () => {
         expect(allPropertyKeys).toContain("_privateTestFunction");
         expect(allPropertyKeys).toContain(TestSymbol);
 
-        expect(allProperties.someProp.value).toEqual((TestClass.prototype as any).someProp);
+        expect(allProperties.someProp.value).toEqual((TestClass.prototype as unknown as { someProp: unknown}).someProp);
         expect(allProperties[TestSymbol].value).toBeTypeOf("function");
 
         expect(allProperties.testFunction).not.toBeUndefined();
@@ -107,7 +107,7 @@ describe("getAllInheritedPropertiesFromPrototypeChain", () => {
 
     it("property on parent's prototype is in the list of all properties", () => {
         class BaseClass { }
-        (BaseClass.prototype as any).testProp = "Level 42";
+        (BaseClass.prototype as unknown as { testProp: string}).testProp = "Level 42";
 
         class TestBaseClass extends BaseClass {
             public testParentFunction2() {
@@ -143,7 +143,7 @@ describe("getAllInheritedPropertiesFromPrototypeChain", () => {
         class TestClassWithGetter { }
 
         Object.defineProperty(TestClassWithGetter.prototype, "someProp", {
-            get(): any {
+            get() {
                 return "Level 42";
             },
             enumerable: true,

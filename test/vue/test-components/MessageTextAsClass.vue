@@ -15,7 +15,7 @@ export default class MessageTextAsClass {
         if (props) {
             Object.getOwnPropertyNames(props)
                 .forEach((propName) => Object.defineProperty(instance, propName, {
-                    get(): any {
+                    get() {
                         return props[propName];
                     },
                 }))
