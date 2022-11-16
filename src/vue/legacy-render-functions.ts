@@ -202,9 +202,9 @@ type VueComponent  = {
 }
 
 function getFunctionFromCompatOrThrowError<F>(vue: VueComponent, name: string) : F {
-    const legayFunctions = (vue.$?.proxy as unknown as Record<string, F>);
-    if (typeof legayFunctions[name] === "function") {
-        return legayFunctions[name];
+    const legacyFunctions = (vue.$?.proxy as unknown as Record<string, F>);
+    if (typeof legacyFunctions[name] === "function") {
+        return legacyFunctions[name];
     }
     throw new Error("Legacy function is not available with this Vue 3 build. Use @vue/compat instead!");
 }
