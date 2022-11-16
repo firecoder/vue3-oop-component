@@ -53,7 +53,7 @@ export function defineNewLinkedProperties<T extends Vue>(
  * @param writeTarget write all new properties to this target
  * @param readTargetIfMissingInWrite read all missing properties from here
  */
-export function createProxyRedirectReads<T extends Record<string | symbol, unknown>>(
+export function createProxyRedirectReads(
     writeTarget: Record<string | symbol, unknown>,
     readTargetIfMissingInWrite: Record<string | symbol, unknown>,
 ): Record<string | symbol, unknown> {

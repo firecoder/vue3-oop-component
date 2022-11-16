@@ -13,7 +13,6 @@ import type {
     CompatibleComponentOptions,
     DefaultMethods,
     DefaultProps,
-    PropsDefinition,
     RecordPropsDefinition,
     Vue,
 } from "../vue";
@@ -361,7 +360,7 @@ export function generateGetterForProperties<V extends Vue = Vue>(
             isInitialised = true;
 
             const allPropDefinitions = (new ComponentBuilderImpl(component).getOptionsForComponent() || [])
-                .map((options) => options["props"] as PropsDefinition<DefaultProps>)
+                .map((options) => options["props"])
                 .filter((value) => value !== undefined && value !== null)
             ;
 
@@ -456,7 +455,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
             builder.rawInstance.$ = vueComponentInternalInstance;
             defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
             addLegacyRenderingFunctions(builder.rawInstance);
-            (builder.rawInstance as IndexableReturnsAny<Vue>)._setupContext = context;
+            builder.rawInstance._setupContext = context;
         }
 
         builder.registerLifeCycleHooks();
