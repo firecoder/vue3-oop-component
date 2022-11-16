@@ -3,7 +3,7 @@ import type { ComponentOptionsWithObjectProps, SetupContext } from "vue";
 import type { VueClassComponent } from "../../src";
 import { Vue } from "../../src";
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import MessageTextAsDecoratedClass from ".//../vue/test-components/MessageTextAsDecoratedClass.vue";
 import { mount } from "@vue/test-utils";
 import { Component } from "../../src";

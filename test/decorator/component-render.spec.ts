@@ -2,7 +2,7 @@
 import type { VueClassComponent } from "../../src";
 import { Vue } from "../../src";
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Component } from "../../src";
 
 describe("Component():", () => {

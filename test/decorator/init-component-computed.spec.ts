@@ -2,7 +2,7 @@
 import type { Vue } from "../../src/vue";
 
 import {computed, reactive, triggerRef} from "vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import * as sinon from "sinon";
 
 import { ComponentBuilderImpl } from "../../src/decorator/ComponentBuilderImpl";
