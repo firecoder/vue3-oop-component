@@ -9,19 +9,19 @@ export declare class ComponentBuilderImpl<T extends Vue> implements IComponentBu
     private _rawInstance?;
     private _reactiveWrapper?;
     private _watchersToCreate;
-    constructor(instanceOrClass?: ((T & Vue) | VueClassComponent<T>));
+    constructor(instanceOrClass?: (T | VueClassComponent<T>));
     createAndUseNewInstance(): ComponentBuilderImpl<T>;
     /** @inheritdoc */
-    get componentClass(): VueClassComponent<T>;
+    get componentClass(): VueClassComponent<T> | undefined;
     /** @inheritdoc */
-    get instance(): T & Vue;
-    set instance(newInstance: T & Vue);
+    get instance(): Vue & T | undefined;
+    set instance(newInstance: T | undefined);
     /** @inheritdoc */
-    get rawInstance(): T & Vue;
+    get rawInstance(): Vue & T | undefined;
     /** @inheritdoc */
-    get reactiveWrapper(): UnwrapNestedRefs<T & Vue>;
+    get reactiveWrapper(): UnwrapNestedRefs<T> | undefined;
     /** @inheritdoc */
-    build(): T;
+    build(): Vue & T;
     /** @inheritdoc */
     applyDataValues(dataValues?: DefaultData<T>): ComponentBuilderImpl<T>;
     /** @inheritdoc */

@@ -1,5 +1,5 @@
 import type { Component, Slot, VNodeProps, VNode, VNodeArrayChildren } from "vue";
-import type { VueClass } from "./vue";
+import type { VueClass, Vue } from "./vue";
 export declare type LegacyVNodeChildren = string | number | boolean | VNode | VNodeArrayChildren;
 export declare type ScopedSlot = Function;
 export declare type Data = Record<string, unknown>;
@@ -145,4 +145,4 @@ export declare function addLegacyRenderingFunctions<V>(vue: V): V & VueLegacyRen
  * @param componentClass
  * @constructor
  */
-export declare function MixinCustomRender<A>(componentClass: VueClass<A>): VueClass<A> & VueLegacyRenderFunctions;
+export declare function MixinCustomRender<A extends Vue>(componentClass: VueClass<A>): VueClass<A> & VueLegacyRenderFunctions;

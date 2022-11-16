@@ -17,10 +17,10 @@ export declare type VueDecorator = ClassDecorator | PropertyDecorator | MethodDe
  *     better choice for class based components but need to define and detect the list of properties upfront.
  * </p>
  */
-export declare type DecoratedClass = VueClass<Vue> & {
-    __decorators__?: ((options: CompatibleComponentOptions<Vue>) => void)[];
+export declare type DecoratedClass<V extends Vue = Vue> = VueClass<V> & {
+    __decorators__?: ((options: CompatibleComponentOptions<V>) => void)[];
 };
-export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>) => void): ClassDecorator;
-export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol) => void): PropertyDecorator;
-export declare function createDecorator(callback: <T>(options: CompatibleComponentOptions<Vue>, key: string | symbol, descriptor: TypedPropertyDescriptor<T>) => void): MethodDecorator;
-export declare function createDecorator(callback: (options: CompatibleComponentOptions<Vue>, key: string | symbol, parameterIndex: number) => void): ParameterDecorator;
+export declare function createDecorator<V extends Vue = Vue>(callback: (options: CompatibleComponentOptions<V>) => void): ClassDecorator;
+export declare function createDecorator<V extends Vue = Vue>(callback: (options: CompatibleComponentOptions<V>, key: string | symbol) => void): PropertyDecorator;
+export declare function createDecorator<V extends Vue = Vue>(callback: <T>(options: CompatibleComponentOptions<V>, key: string | symbol, descriptor: TypedPropertyDescriptor<T>) => void): MethodDecorator;
+export declare function createDecorator<V extends Vue = Vue>(callback: (options: CompatibleComponentOptions<V>, key: string | symbol, parameterIndex: number) => void): ParameterDecorator;

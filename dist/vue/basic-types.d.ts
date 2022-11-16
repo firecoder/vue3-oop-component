@@ -12,7 +12,7 @@ export interface Constructor<T = any> {
 export declare type Accessors<T> = {
     [K in keyof T]: (() => T[K]) | ComputedOptions<T[K]>;
 };
-export declare type DefaultData<V> = object | ((this: V) => object);
+export declare type DefaultData<V> = Record<string, unknown> | ((this: V) => Record<string, unknown>);
 export declare type DefaultProps = Record<string, any> | string[];
 export declare type DefaultMethods<V> = {
     [key: string]: (this: V, ...args: any[]) => any;
@@ -40,8 +40,8 @@ export interface PropOptions<T = any> {
 export declare type RecordPropsDefinition<T> = {
     [K in keyof T]: PropValidator<T[K]>;
 };
-export declare type ArrayPropsDefinition<T> = (keyof T)[];
-export declare type PropsDefinition<T> = string[] | ArrayPropsDefinition<T> | RecordPropsDefinition<T>;
+export declare type ArrayPropsDefinition<T extends Record<string, unknown>> = (string & keyof T)[];
+export declare type PropsDefinition<T extends Record<string, any>> = string[] | ArrayPropsDefinition<T> | RecordPropsDefinition<T>;
 export interface ComputedOptions<T> extends WritableComputedOptions<T> {
     cache?: boolean;
 }

@@ -49,7 +49,7 @@ export declare function createVccOptions<V extends Vue = Vue>(component: VueClas
  *
  * @param component
  */
-export declare function getComputedValuesDefinitionFromComponentPrototype(component: ComponentWithCustomSetup): CompatibleComponentOptions<Vue>["computed"];
+export declare function getComputedValuesDefinitionFromComponentPrototype<V extends Vue = Vue>(component: ComponentWithCustomSetup<V>): CompatibleComponentOptions<V>["computed"];
 /**
  * Creates the defined methods from the options and applies them to the prototype of the component.
  *
@@ -61,19 +61,19 @@ export declare function getComputedValuesDefinitionFromComponentPrototype(compon
  * @param component
  * @param options the decorator options passed-in
  */
-export declare function applyMethodsFromOptions(component: ComponentWithCustomSetup, options: CompatibleComponentOptions<Vue>): ComponentWithCustomSetup;
+export declare function applyMethodsFromOptions<V extends Vue = Vue>(component: ComponentWithCustomSetup<V>, options: CompatibleComponentOptions<V>): ComponentWithCustomSetup<V>;
 /**
  * Generate getter function to fetch definition of Vue properties from the options stored in the component instance.
  *
  * @param component the component to instantiate and read its options.
  */
-export declare function generateGetterForProperties<V extends Vue = Vue>(component: ComponentWithCustomSetup<V>): (() => RecordPropsDefinition<DefaultProps>);
+export declare function generateGetterForProperties<V extends Vue = Vue>(component: VueClassComponent<V>): (() => RecordPropsDefinition<DefaultProps>);
 /**
  * Generate getter function to fetch definition of imported components from the options stored in the instance.
  *
  * @param component the component to instantiate and read its options.
  */
-export declare function generateGetterForComponents<V extends Vue = Vue>(component: ComponentWithCustomSetup<V>): (() => Record<string, Component>);
+export declare function generateGetterForComponents<V extends Vue = Vue>(component: VueClassComponent<V>): (() => Record<string, Component>);
 /**
  * Generates a setup function for the class component.
  *

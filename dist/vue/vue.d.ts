@@ -4,8 +4,7 @@
  *
  * @see: https://github.com/vuejs/vue-class-component/blob/next/src/vue.ts
  */
-import type { ComponentPublicInstance, ComponentInternalInstance, MethodOptions, VNode, VNodeProps, AllowedComponentProps, ComponentCustomProps, ComponentOptionsBase, EmitsOptions, ObjectEmitsOptions, SetupContext, WatchOptions, WatchStopHandle } from "vue";
-import type { ComponentWithCustomSetup } from "../decorator/component-decorator-types";
+import type { ComponentPublicInstance, ComponentInternalInstance, DefineComponent, VNode, VNodeProps, AllowedComponentProps, ComponentCustomProps, ComponentOptionsBase, ComponentPropsOptions, CreateComponentPublicInstance, SetupContext, WatchOptions, WatchStopHandle } from "vue";
 import type { CompatibleComponentOptions } from "./legacy-component-options";
 import type { Constructor } from "./basic-types";
 import { h } from "vue";
@@ -26,12 +25,11 @@ export interface ClassComponentHooks {
     errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined;
     serverPrefetch?(): Promise<unknown>;
 }
-export interface CustomClassImplementation {
-}
-export declare type Vue<Props = any, Emits extends EmitsOptions = ObjectEmitsOptions, DefaultProps = Record<string, any>> = ComponentPublicInstance<Props, Record<string, any>, Record<string, any>, Record<string, any>, MethodOptions, Emits, PublicProps, DefaultProps, true> & ClassComponentHooks & CustomClassImplementation & ComponentWithCustomSetup;
-export declare type VueBase = Vue<any, string[]>;
+export declare type Vue<Props extends ComponentPropsOptions = any> = CreateComponentPublicInstance<Props> & ClassComponentHooks;
+export declare type VueBase = Vue;
 export declare type VueConstructor<V extends Vue = VueBase> = Constructor<V>;
-export declare type VueClass<V extends Vue> = VueConstructor<V>;
+export declare type VueClass<V extends Vue = VueBase> = Omit<DefineComponent<{}, V>, "setup"> & VueConstructor<V>;
+export declare type IndexableReturnsAny<T> = Record<string | symbol, unknown> & T;
 /**
  * This is the base implementation of class component instances implementing interface {@code Vue}.
  *
@@ -91,7 +89,7 @@ export declare class VueComponentBaseImpl implements VueBase {
      * This is used internally by the component decorator.
      * @private
      */
-    protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueComponentBaseImpl>[];
+    protected _getVueClassComponentOptions(): CompatibleComponentOptions<VueBase>[];
 }
 /**
  * Helper function to check, whether the provided instance is based on this Vue base class.
@@ -106,4 +104,4 @@ export declare class VueComponentBaseImpl implements VueBase {
  */
 export declare function isVueClassInstance(instance: unknown): instance is Vue;
 export declare function isReservedPrefix(key: string | symbol): boolean;
-export declare const Vue: VueConstructor;
+export declare const Vue: any;

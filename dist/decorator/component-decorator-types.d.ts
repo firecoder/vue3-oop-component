@@ -1,16 +1,16 @@
 import type { ComponentInternalInstance, ComponentOptionsWithObjectProps } from "vue";
-import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
-export declare type ComponentOptions<V> = CompatibleComponentOptions<V>;
+import type { CompatibleComponentOptions, Vue, VueBase, VueClass } from "../vue";
+export declare type ComponentOptions<V extends Vue> = CompatibleComponentOptions<V>;
+/**
+ * The component decorator may be configured by passing in some configuration data.
+ */
+export interface ComponentConfiguration {
+    maintainCompatibilityWithVueVersion?: number;
+}
 /**
  * A custom component setup function/method that will be called once at the very end of the setup.
  */
-export declare type CustomComponentSetupFunction<V extends Vue = Vue> = Pick<CompatibleComponentOptions<V>, "setup">["setup"];
-/**
- * A class providing the custom setup function to the component decorator.
- */
-export interface ComponentWithCustomSetup<V extends Vue = Vue> extends VueClass<V> {
-    setup?: CustomComponentSetupFunction<V>;
-}
+export declare type CustomComponentSetupFunction<V extends Vue> = Pick<CompatibleComponentOptions<V>, "setup">["setup"];
 /**
  * This is the component setup functions that is used to create the instance from the class component.
  *
@@ -20,6 +20,12 @@ export interface ComponentWithCustomSetup<V extends Vue = Vue> extends VueClass<
  * </p>
  */
 export declare type VueComponentSetupFunction = Pick<ComponentOptionsWithObjectProps, "setup">["setup"];
+/**
+ * A class providing the custom setup function to the component decorator.
+ */
+export interface ComponentWithCustomSetup<V extends Vue = Vue> extends VueClass<V> {
+    setup?: CustomComponentSetupFunction<V>;
+}
 /**
  * A Vue class component as created by the component decorator.
  *
@@ -36,7 +42,7 @@ export declare type VueComponentSetupFunction = Pick<ComponentOptionsWithObjectP
  *     the class component property.
  * </p>
  */
-export interface VueClassComponent<V extends Vue = Vue> extends ComponentWithCustomSetup<V> {
+export interface VueClassComponent<V extends Vue = VueBase> extends VueClass<V> {
     /**
      * This is the Vue 3 "trigger" to make a class work as component.
      */
@@ -56,3 +62,4 @@ export interface VueClassComponent<V extends Vue = Vue> extends ComponentWithCus
      */
     beforeCreate?(this: ComponentInternalInstance): void;
 }
+export declare function isVueClassComponent<V extends Vue = Vue>(v: unknown): v is VueClass<V>;

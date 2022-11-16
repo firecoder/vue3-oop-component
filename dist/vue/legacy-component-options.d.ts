@@ -1,10 +1,10 @@
 import type { Vue, VueClass } from "./vue";
-import type { ComponentInternalInstance, ComponentProvideOptions, ComponentOptionsBase, SetupContext, VNode } from "vue";
-import type { Accessors, CreateElement, ComponentInjectOptions, ComponentWatchOptions, DebuggerHook, DefaultComputed, DefaultData, DefaultMethods, DefaultProps, ErrorCapturedHook, MethodsWithoutThis, PropsDefinition } from "./basic-types";
+import type { ComponentInternalInstance, ComponentProvideOptions, ComponentOptionsBase, ComponentPropsOptions, ComputedOptions, ExtractDefaultPropTypes, SetupContext, VNode } from "vue";
+import type { Accessors, CreateElement, ComponentInjectOptions, ComponentWatchOptions, DebuggerHook, DefaultComputed, DefaultMethods, ErrorCapturedHook, MethodsWithoutThis } from "./basic-types";
 import type { IComponentBuilder } from "../decorator/IComponentBuilder";
-export interface CompatibleComponentOptions<V extends Vue, Data = DefaultData<V>, Methods = DefaultMethods<V>, Computed = DefaultComputed, PropsDef = PropsDefinition<DefaultProps>, Props = DefaultProps> extends Omit<ComponentOptionsBase<Props, V, Data, Accessors<Computed>, MethodsWithoutThis<Methods>, any, any, any>, "setup"> {
-    data?: Data;
-    props?: PropsDef;
+export interface CompatibleComponentOptions<V extends Vue, Props extends ComponentPropsOptions = ComponentPropsOptions, DefaultProps extends ExtractDefaultPropTypes<Props> = ExtractDefaultPropTypes<Props>, Methods extends DefaultMethods<V> = DefaultMethods<V>, Computed extends ComputedOptions = DefaultComputed> extends Omit<ComponentOptionsBase<Props, V, DefaultProps, Accessors<Computed>, MethodsWithoutThis<Methods>, any, any, any>, "setup"> {
+    data?: DefaultProps;
+    props?: Props;
     methods?: Methods;
     /**
      * Optional custom component setup function.

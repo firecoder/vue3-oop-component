@@ -8,4 +8,4 @@
  * @param wrappedFunctions all the wrapped functions to call with the received arguments.
  * @return a function to wrap all the other once, calling each of them if executed.
  */
-export declare function generateMultiFunctionWrapper(...wrappedFunctions: ((...args: unknown[]) => unknown)[]): (...args: unknown[]) => unknown;
+export declare function generateMultiFunctionWrapper(...wrappedFunctions: ((...args: unknown[]) => unknown)[]): (this: unknown, ...args: unknown[]) => unknown;

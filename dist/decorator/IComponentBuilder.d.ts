@@ -23,7 +23,7 @@ export interface IComponentBuilder<T extends Vue> {
     /**
      * The class the instance is created from.
      */
-    readonly componentClass: VueClassComponent<T>;
+    readonly componentClass?: VueClassComponent<T>;
     /**
      * The instances to use for accessing property and methods.
      *
@@ -31,7 +31,7 @@ export interface IComponentBuilder<T extends Vue> {
      * Basically the reactive instance, since this should be used with the component.
      * </p>
      */
-    readonly instance: T & Vue;
+    readonly instance?: Vue & T;
     /**
      * The unwrapped instances that is not reactive.
      *
@@ -39,7 +39,7 @@ export interface IComponentBuilder<T extends Vue> {
      * New properties will be defined directly on this instance and not on the reactive wrapper.
      * </p>
      */
-    readonly rawInstance: T & Vue;
+    readonly rawInstance?: Vue & T;
     /**
      * The created reactive wrapper for the raw instance.
      *
@@ -48,7 +48,7 @@ export interface IComponentBuilder<T extends Vue> {
      * react to value changes.
      * </p>
      */
-    readonly reactiveWrapper: UnwrapNestedRefs<T & Vue>;
+    readonly reactiveWrapper?: UnwrapNestedRefs<T>;
     /**
      * Finalises the build and returns the fully initialised and patched Component that should be returned to Vue.
      *
@@ -57,7 +57,11 @@ export interface IComponentBuilder<T extends Vue> {
      *     custom {@code setup} functions must not call this!
      * </p>
      */
-    build(): T;
+    build(): Vue & T;
+    /**
+     * Creates a new instance, stores it internally and returns the build for use with Fluent Interface
+     */
+    createAndUseNewInstance(): IComponentBuilder<T>;
     /**
      * Uses the defined data and created properties on the instance with the defined name and the value.
      *
@@ -168,5 +172,5 @@ export interface IComponentBuilder<T extends Vue> {
      *
      * @param watchers the watchers to define
      */
-    watcherForPropertyChange(watchers?: CompatibleComponentOptions<Vue>["watch"]): IComponentBuilder<T>;
+    watcherForPropertyChange(watchers?: CompatibleComponentOptions<T>["watch"]): IComponentBuilder<T>;
 }

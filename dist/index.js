@@ -29,9 +29,9 @@ const CompositionApi = {
 };
 function getFunctionFromCompatOrThrowError(vue, name) {
   var _a;
-  const legayFunctions = (_a = vue.$) == null ? void 0 : _a.proxy;
-  if (typeof legayFunctions[name] === "function") {
-    return legayFunctions[name];
+  const legacyFunctions = (_a = vue.$) == null ? void 0 : _a.proxy;
+  if (typeof legacyFunctions[name] === "function") {
+    return legacyFunctions[name];
   }
   throw new Error("Legacy function is not available with this Vue 3 build. Use @vue/compat instead!");
 }
@@ -405,6 +405,9 @@ function createReferenceSetterFunc(reference) {
     reference.value = newValue;
   };
 }
+function hasConstructor(v) {
+  return typeof v === "object" && !!(v == null ? void 0 : v.constructor);
+}
 class ComponentBuilderImpl {
   constructor(instanceOrClass) {
     __publicField(this, "_component");
@@ -414,29 +417,30 @@ class ComponentBuilderImpl {
     __publicField(this, "_watchersToCreate", []);
     if (typeof instanceOrClass === "function") {
       this.setComponentClass(instanceOrClass);
-    } else if (typeof instanceOrClass === "object") {
+    } else if (typeof instanceOrClass === "object" && hasConstructor(instanceOrClass)) {
       this.setComponentClass(instanceOrClass.constructor);
       this.instance = instanceOrClass;
     }
   }
   createAndUseNewInstance() {
-    if (typeof this._component !== "function") {
+    if (typeof this._component === "function") {
+      this.instance = new this._component();
+    } else {
       throw new Error("Failed to create new component! No class for the component has been provided.");
     }
-    this.instance = new this._component();
     return this;
   }
   get componentClass() {
-    var _a;
-    return this._component || ((_a = this.rawInstance) == null ? void 0 : _a.constructor);
+    return this._component || hasConstructor(this.rawInstance) && this.rawInstance.constructor || void 0;
   }
   get instance() {
     return this.reactiveWrapper;
   }
   set instance(newInstance) {
     if (typeof newInstance === "object") {
-      this._rawInstance = toRaw(newInstance);
-      this._reactiveWrapper = reactive(this._rawInstance);
+      const rawInstance = toRaw(newInstance);
+      this._rawInstance = rawInstance;
+      this._reactiveWrapper = reactive(rawInstance);
     } else {
       this._rawInstance = void 0;
       this._reactiveWrapper = void 0;
@@ -456,7 +460,11 @@ class ComponentBuilderImpl {
     }
     this._hasBeenFinalised = true;
     this._createAllWatchers();
-    return createVueRenderContext(this.rawInstance, this.reactiveWrapper);
+    if (this.rawInstance !== void 0 && this.reactiveWrapper !== void 0) {
+      return createVueRenderContext(this.rawInstance, this.reactiveWrapper);
+    } else {
+      throw new Error("Check for valid instance failed!");
+    }
   }
   applyDataValues(dataValues) {
     this._checkValidInstanceAndThrowError();
@@ -497,7 +505,8 @@ class ComponentBuilderImpl {
   getOptionsForComponent() {
     let allOptions = (this._component && collectStaticPropertyFromPrototypeChain(this._component, "__vccOpts") || []).map((vccOptions) => vccOptions.__component_decorator_original_options).filter((options) => !!options);
     if (!(allOptions == null ? void 0 : allOptions.length) && typeof this._component === "function") {
-      const instance = new this._component();
+      const componentClass = this._component;
+      const instance = new componentClass();
       if (typeof instance._getVueClassComponentOptions === "function") {
         allOptions = (instance._getVueClassComponentOptions() || []).filter((options) => !!options);
       }
@@ -506,6 +515,9 @@ class ComponentBuilderImpl {
   }
   injectData(injectDefinitions) {
     this._checkValidInstanceAndThrowError();
+    if (this.reactiveWrapper === void 0) {
+      throw new Error("FAILED: No instance has been created!");
+    }
     const instance = this.reactiveWrapper;
     if (Array.isArray(injectDefinitions)) {
       injectDefinitions.filter(isNotInternalHookName).forEach((propName) => instance[propName] = CompositionApi.inject(propName));
@@ -556,7 +568,7 @@ class ComponentBuilderImpl {
     this._checkValidInstanceAndThrowError();
     const rawHookFunctions = hookFunctions && toRaw(hookFunctions) || void 0;
     if (rawHookFunctions) {
-      Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions).filter((hookName) => typeof rawHookFunctions[hookName] === "function").forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](rawHookFunctions[hookName].bind(this.reactiveWrapper), this.rawInstance.$));
+      Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions).filter((hookName) => typeof rawHookFunctions[hookName] === "function").forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](rawHookFunctions[hookName].bind(this.reactiveWrapper), this.rawInstance ? this.rawInstance.$ : void 0));
     }
     return this;
   }
@@ -603,6 +615,7 @@ class ComponentBuilderImpl {
             let handler = void 0;
             let handlerName = void 0;
             let watchOptions = {};
+            const instance = this.rawInstance;
             if (typeof currentWatchSpec === "object") {
               watchOptions = currentWatchSpec;
               if (typeof currentWatchSpec.handler === "string") {
@@ -617,7 +630,7 @@ class ComponentBuilderImpl {
               if (handlerName === watchName) {
                 throw new Error(`Invalid watcher defined!
                                     Can not watch on property ${watchName} and call same property on change!`);
-              } else if (typeof this.rawInstance[handlerName] !== "function") {
+              } else if (instance !== void 0 && typeof instance[handlerName] !== "function") {
                 throw new Error(`Invalid watcher defined!
                                     The named handler '${handlerName}' for watched property '${watchName}'
                                     is no member function of the component instance!`);
@@ -654,8 +667,11 @@ class ComponentBuilderImpl {
     return this;
   }
   _checkValidInstanceAndThrowError() {
-    if (this._rawInstance === void 0) {
-      throw new Error("Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!");
+    if (this.instance === void 0) {
+      this.createAndUseNewInstance();
+      if (this.instance === void 0) {
+        throw new Error("Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!");
+      }
     }
   }
 }
@@ -730,7 +746,8 @@ function createVccOptions(component, options = {}) {
     return void 0;
   }
   const name = options.name || component._componentTag || component.name;
-  const vccOpts = {
+  const vccOpts = component.__vccOpts = {
+    ...component.__vccOpts,
     name,
     setup: generateSetupFunction(component),
     __component_decorator_original_options: options,
@@ -859,6 +876,7 @@ function generateGetterForComponents(component) {
 }
 function generateSetupFunction(component) {
   return function setupClassComponent(properties, context) {
+    var _a, _b;
     setCurrentSetupContext(context);
     const vueComponentInternalInstance = CompositionApi.getCurrentInstance() || {};
     const builder = new ComponentBuilderImpl().setComponentClass(component).createAndUseNewInstance();
@@ -868,21 +886,23 @@ function generateSetupFunction(component) {
         options.beforeCreate.call(vueComponentInternalInstance);
       }
     });
-    builder.rawInstance.$ = vueComponentInternalInstance;
-    defineNewLinkedProperties(builder.rawInstance, (vueComponentInternalInstance == null ? void 0 : vueComponentInternalInstance.props) || properties);
-    addLegacyRenderingFunctions(builder.rawInstance);
-    builder.rawInstance._setupContext = context;
+    if (builder.rawInstance !== void 0) {
+      builder.rawInstance.$ = vueComponentInternalInstance;
+      defineNewLinkedProperties(builder.rawInstance, (vueComponentInternalInstance == null ? void 0 : vueComponentInternalInstance.props) || properties);
+      addLegacyRenderingFunctions(builder.rawInstance);
+      builder.rawInstance._setupContext = context;
+    }
     builder.registerLifeCycleHooks();
     allOptions.forEach((options) => builder.applyDataValues(options.data).createComputedValues(options.computed).injectData(options.inject).provideData(options.provide).registerAdditionalLifeCycleHooks(options).watcherForPropertyChange(options.watch));
-    if (typeof builder.rawInstance.setup === "function") {
-      builder.rawInstance.setup.call(builder.instance, builder, properties, context);
+    if (typeof ((_a = builder.rawInstance) == null ? void 0 : _a.setup) === "function") {
+      (_b = builder.rawInstance) == null ? void 0 : _b.setup.call(builder.instance, builder, properties, context);
     }
     allOptions.forEach((options) => {
       if (typeof options.setup === "function") {
         options.setup.call(builder.instance, builder, properties, context);
       }
     });
-    if (typeof builder.instance.created === "function") {
+    if (builder.instance !== void 0 && typeof builder.instance.created === "function") {
       builder.instance.created();
     }
     clearCurrentSetupContext();
@@ -891,8 +911,7 @@ function generateSetupFunction(component) {
 }
 function Component(options) {
   if (typeof options === "function") {
-    const Component2 = options;
-    return componentFactory(Component2);
+    return componentFactory(options);
   }
   return function ComponentDecorator(Component2) {
     return componentFactory(Component2, options);
@@ -906,14 +925,23 @@ function mixins(...Constructors) {
 function createDecorator(callback) {
   return function CreatedVueDecorator(target, key, index) {
     const ConstructorFunc = typeof target === "function" ? target : target.constructor;
-    if (!ConstructorFunc.__decorators__) {
-      ConstructorFunc.__decorators__ = [];
+    if (!Object.hasOwn(ConstructorFunc, "__decorators__") || !ConstructorFunc.__decorators__) {
+      Object.defineProperty(ConstructorFunc, "__decorators__", {
+        enumerable: true,
+        value: [],
+        writable: true
+      });
     }
     if (typeof index !== "number") {
       index = void 0;
     }
-    ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
+    if (ConstructorFunc.__decorators__ !== void 0) {
+      ConstructorFunc.__decorators__.push((options) => callback(options, key || Symbol(), index));
+    }
   };
+}
+function isVueClassComponent(v) {
+  return typeof v === "object" && !!(v == null ? void 0 : v.__vccOpts);
 }
 export {
   $internalHookNames,
@@ -929,6 +957,7 @@ export {
   isInternalHookName,
   isNotInternalHookName,
   isReservedPrefix,
+  isVueClassComponent,
   isVueClassInstance,
   mixins
 };
