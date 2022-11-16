@@ -24,9 +24,10 @@ describe("Component():", () => {
                 }
             }
 
-            const SimpleComponentClassVue = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>);
-            expect(SimpleComponentClassVue.__vccOpts.render!(new SimpleComponentClass()))
-                .toEqual(new SimpleComponentClass().render());
+            const SimpleComponentClassVue = (SimpleComponentClass as unknown as VueClassComponent);
+            expect(SimpleComponentClassVue.__vccOpts.render ?
+                SimpleComponentClassVue.__vccOpts.render(new SimpleComponentClass()) : undefined,
+            ).toEqual(new SimpleComponentClass().render());
         });
 
         it("the render function calls parent class render function",  () => {
@@ -42,9 +43,10 @@ describe("Component():", () => {
             @Component
             class SimpleComponentClass extends SimpleBaseComponentClass {}
 
-            const SimpleComponentClassVue = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>);
-            expect(SimpleComponentClassVue.__vccOpts.render!(new SimpleComponentClass()))
-                .toEqual(compareValue);
+            const SimpleComponentClassVue = (SimpleComponentClass as unknown as VueClassComponent<SimpleComponentClass>);
+            expect(SimpleComponentClassVue.__vccOpts.render ?
+                SimpleComponentClassVue.__vccOpts.render(new SimpleComponentClass()) : undefined,
+            ).toEqual(compareValue);
         });
 
         it("the parent render function avoids loop looking for it's parent", () => {
@@ -68,9 +70,10 @@ describe("Component():", () => {
 
             expect(new SimpleComponentClass().render).toBeUndefined();
 
-            const SimpleComponentClassVue = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>);
-            expect(SimpleComponentClassVue.__vccOpts.render!(new SimpleComponentClass()))
-                .toEqual(compareValue);
+            const SimpleComponentClassVue = (SimpleComponentClass as unknown as VueClassComponent<SimpleComponentClass>);
+            expect(SimpleComponentClassVue.__vccOpts.render ?
+                SimpleComponentClassVue.__vccOpts.render(new SimpleComponentClass()) : undefined,
+            ).toEqual(compareValue);
         });
     });
 });
