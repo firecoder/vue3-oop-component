@@ -10,7 +10,6 @@ export { Component };
 
 export * from "./vue";
 export * from "./mixins";
-export * from "./utility-types";
 // export * from "./types";
 export * from "./decorator/IComponentBuilder";
 export * from "./decorator/decorator";
