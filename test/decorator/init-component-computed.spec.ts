@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import type { Vue } from "../../src/vue";
 
-import {computed, reactive, triggerRef} from "vue";
+import { computed } from "vue";
 import { afterEach, describe, expect, it } from "vitest";
 import * as sinon from "sinon";
 
