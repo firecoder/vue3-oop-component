@@ -452,10 +452,12 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         });
 
         // assign the current Vue component instance in case the base constructor has not been called properly!
-        builder.rawInstance.$ = vueComponentInternalInstance;
-        defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
-        addLegacyRenderingFunctions(builder.rawInstance);
-        builder.rawInstance._setupContext = context;
+        if (builder.rawInstance !== undefined) {
+            builder.rawInstance.$ = vueComponentInternalInstance;
+            defineNewLinkedProperties(builder.rawInstance, vueComponentInternalInstance?.props || properties);
+            addLegacyRenderingFunctions(builder.rawInstance);
+            (builder.rawInstance as IndexableReturnsAny<Vue>)._setupContext = context;
+        }
 
         builder.registerLifeCycleHooks();
 
@@ -471,8 +473,8 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         );
 
         // call custom setup function of instance
-        if (typeof builder.rawInstance.setup === "function") {
-            builder.rawInstance.setup.call(builder.instance, builder, properties, context);
+        if (typeof builder.rawInstance?.setup === "function") {
+            builder.rawInstance?.setup.call(builder.instance, builder, properties, context);
         }
 
         // call setup functions from the options
@@ -485,7 +487,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         ;
 
         // call the life-cycle hook at the end of the setup
-        if (typeof builder.instance.created === "function") {
+        if (builder.instance !== undefined && typeof builder.instance.created === "function") {
             builder.instance.created();
         }
 

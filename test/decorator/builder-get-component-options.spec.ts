@@ -157,7 +157,7 @@ describe("builder:", () => {
                 public message = "";
             }
 
-            const builder = new ComponentBuilderImpl(ChildClass);
+            const builder = new ComponentBuilderImpl(ChildClass as Vue);
             const options = builder.getOptionsForComponent();
 
             expect(options).not.toBeUndefined();
@@ -182,7 +182,7 @@ describe("builder:", () => {
                 }
             }
 
-            const options = new ComponentBuilderImpl(ComponentClassWithoutStaticOptions).getOptionsForComponent();
+            const options = new ComponentBuilderImpl(ComponentClassWithoutStaticOptions as Vue).getOptionsForComponent();
 
             expect(options).not.toBeUndefined();
             expect(Array.isArray(options)).toBeTruthy();

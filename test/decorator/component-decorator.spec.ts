@@ -25,8 +25,11 @@ describe("Component():", () => {
         expect(vccOptions.props).toBeTypeOf("object");
         expect(vccOptions.props.message).toEqual({});
 
-        const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
-        expect(instance.message).toEqual("Hello World!");
+        const instance = vccOptions.setup !== undefined ?
+            vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
+            undefined
+        ;
+        expect(instance?.message).toEqual("Hello World!");
     });
 
     it("decorator returns component class",  () => {
@@ -56,11 +59,13 @@ describe("Component():", () => {
         expect(ClassComponent.props.message).toBeTypeOf("object");
         expect(ClassComponent.props.message).toEqual({});
 
-        const instance = ClassComponent
-            .setup!({ message: "Hello World!"}, {} as SetupContext) as MessageTextAsDecoratedClass;
+        const instance = ClassComponent.setup ?
+            ClassComponent.setup({ message: "Hello World!"}, {} as SetupContext) as MessageTextAsDecoratedClass :
+            undefined
+        ;
 
         expect(instance).toBeTypeOf("object");
-        expect(instance.message).toEqual("Hello World!");
+        expect(instance?.message).toEqual("Hello World!");
     });
 
     it("renders a simple class as Vue component",  () => {
@@ -94,7 +99,10 @@ describe("Component():", () => {
             }
 
             const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
-            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+            const instance = vccOptions.setup ?
+                vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
+                undefined
+            ;
             expect(instance).not.toHaveProperty("$func");
         });
 
@@ -110,8 +118,11 @@ describe("Component():", () => {
             }
 
             const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
-            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
-            expect(instance.$func).toBeTypeOf("function");
+            const instance = vccOptions.setup ?
+                vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
+                undefined
+            ;
+            expect(instance?.$func).toBeTypeOf("function");
         });
 
         it("new property of instance is visible with 'in' operator",  () => {
@@ -126,14 +137,20 @@ describe("Component():", () => {
             }
 
             const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
-            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
+            const instance = vccOptions.setup ?
+                vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
+                undefined
+            ;
 
-            expect(Object.hasOwn(instance, "newProp")).toBeFalsy();
+            expect(instance).not.to.be.undefined;
+            if (instance !== undefined) {
+                expect(Object.hasOwn(instance, "newProp")).toBeFalsy();
 
-            // define new property
-            instance.newProp = "Level 42";
-            expect(Object.hasOwn(instance, "newProp")).toBeTruthy();
-            expect("newProp" in instance).toBeTruthy();
+                // define new property
+                instance.newProp = "Level 42";
+                expect(Object.hasOwn(instance, "newProp")).toBeTruthy();
+                expect("newProp" in instance).toBeTruthy();
+            }
         });
 
         it("returned methods have `this` context bound",  () => {
@@ -148,9 +165,12 @@ describe("Component():", () => {
             }
 
             const vccOptions = (SimpleComponentClass as VueClassComponent<SimpleComponentClass>).__vccOpts;
-            const instance = vccOptions.setup!({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass;
-            expect(instance.testFunc).toBeTypeOf("function");
-            expect(instance.testFunc.call(undefined)).toEqual("Hello World!");
+            const instance = vccOptions.setup ?
+                vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
+                undefined
+            ;
+            expect(instance?.testFunc).toBeTypeOf("function");
+            expect(instance?.testFunc.call(undefined)).toEqual("Hello World!");
         });
     });
 });

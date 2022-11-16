@@ -1,5 +1,13 @@
 import type { Ref, UnwrapNestedRefs, WatchCallback, WatchOptions } from "vue";
-import type { CompatibleComponentOptions, DefaultData, ObjectProvideOptions, Vue, VueComponentBaseImpl } from "../vue";
+import type {
+    CompatibleComponentOptions,
+    DefaultData,
+    IndexableReturnsAny,
+    ObjectProvideOptions,
+    Vue,
+    VueComponentBaseImpl,
+    VueConstructor,
+} from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 import type { VueClassComponent } from "./component-decorator-types";
 import type { AnyClass } from "../utilities/traverse-prototype";
@@ -28,6 +36,10 @@ function createReferenceSetterFunc(reference: Ref) {
     };
 }
 
+function hasConstructor<V extends Vue = Vue>(v: unknown): v is { constructor: VueClassComponent<V> } {
+    return (typeof v === "object") && !!((v as { constructor: VueClassComponent<V> })?.constructor);
+}
+
 
 /** @inheritdoc */
 export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T> {
@@ -39,37 +51,41 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     public constructor(instanceOrClass?: (T | VueClassComponent<T>)) {
         if (typeof instanceOrClass === "function") {
-            this.setComponentClass(instanceOrClass);
+            this.setComponentClass(instanceOrClass as VueClassComponent<T>);
 
-        } else if (typeof instanceOrClass === "object") {
+        } else if (typeof instanceOrClass === "object" && hasConstructor<T>(instanceOrClass)) {
             this.setComponentClass(instanceOrClass.constructor);
             this.instance = instanceOrClass;
         }
     }
 
     public createAndUseNewInstance(): ComponentBuilderImpl<T> {
-        if (typeof this._component !== "function") {
+        if (typeof this._component === "function") {
+            this.instance = new (this._component as VueConstructor<T>)();
+        } else {
             throw new Error("Failed to create new component! No class for the component has been provided.");
         }
 
-        this.instance = new this._component();
         return this;
     }
 
     /** @inheritdoc */
-    public get componentClass(): VueClassComponent<T> {
-        return this._component || this.rawInstance?.constructor;
+    public get componentClass(): VueClassComponent<T> | undefined {
+        return this._component || (
+            hasConstructor(this.rawInstance) && this.rawInstance.constructor as VueClassComponent<T>
+        ) || undefined;
     }
 
     /** @inheritdoc */
-    public get instance(): T & Vue {
-        return this.reactiveWrapper;
+    public get instance(): Vue & T | undefined {
+        return this.reactiveWrapper as (Vue & T | undefined);
     }
 
-    public set instance(newInstance: T & Vue) {
+    public set instance(newInstance: T | undefined) {
         if (typeof newInstance === "object") {
-            this._rawInstance = toRaw(newInstance);
-            this._reactiveWrapper = reactive(this._rawInstance);
+            const rawInstance = toRaw(newInstance);
+            this._rawInstance = rawInstance;
+            this._reactiveWrapper = reactive(rawInstance as Vue);
         } else {
             this._rawInstance = undefined;
             this._reactiveWrapper = undefined;
@@ -77,12 +93,12 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     /** @inheritdoc */
-    public get rawInstance(): T & Vue {
+    public get rawInstance(): Vue & T | undefined {
         return this._rawInstance;
     }
 
     /** @inheritdoc */
-    public get reactiveWrapper(): UnwrapNestedRefs<T & Vue> {
+    public get reactiveWrapper(): UnwrapNestedRefs<T> | undefined {
         return this._reactiveWrapper;
     }
 
@@ -103,7 +119,11 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         // because Vue checks only for "own properties" in the return value, an intermediate class is needed to contain
         // all properties and all inherited functions as "own properties".
         // see: https://github.com/vuejs/core/blob/8dcb6c7bbdd2905469e2bb11dfff27b58cc784b2/packages/runtime-core/src/componentPublicInstance.ts#L265
-        return createVueRenderContext(this.rawInstance, this.reactiveWrapper);
+        if (this.rawInstance !== undefined && this.reactiveWrapper !== undefined) {
+            return createVueRenderContext<T>(this.rawInstance, this.reactiveWrapper);
+        } else {
+            throw new Error("Check for valid instance failed!");
+        }
     }
 
     /** @inheritdoc */
@@ -206,9 +226,10 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
         // no options have been found, create an instance and try this way
         if (!allOptions?.length && typeof this._component === "function") {
-            const instance = new this._component();
-            if (typeof (instance as VueComponent)._getVueClassComponentOptions === "function") {
-                allOptions = ((instance as VueComponent)._getVueClassComponentOptions() || [])
+            const componentClass = this._component as VueClassComponent<T>;
+            const instance = new componentClass();
+            if (typeof (instance as unknown as VueComponent)._getVueClassComponentOptions === "function") {
+                allOptions = ((instance as unknown as VueComponent)._getVueClassComponentOptions() || [])
                     .filter((options) => !!options);
             }
         }
@@ -220,7 +241,11 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     public injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): ComponentBuilderImpl<T> {
         this._checkValidInstanceAndThrowError();
 
-        const instance = this.reactiveWrapper;
+        if (this.reactiveWrapper === undefined) {
+            throw new Error("FAILED: No instance has been created!");
+        }
+
+        const instance = this.reactiveWrapper as unknown as Record<string | symbol, unknown>;
 
         if (Array.isArray(injectDefinitions)) {
             injectDefinitions
@@ -283,7 +308,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
     /** @inheritdoc */
     public registerLifeCycleHooks(): IComponentBuilder<T> {
-        return this.registerAdditionalLifeCycleHooks(this.rawInstance as unknown as CompatibleComponentOptions<Vue>);
+        return this.registerAdditionalLifeCycleHooks(this.rawInstance as unknown as CompatibleComponentOptions<T>);
     }
 
     /** @inheritdoc */
@@ -296,7 +321,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 .filter((hookName) =>  typeof rawHookFunctions[hookName] === "function")
                 .forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](
                     rawHookFunctions[hookName].bind(this.reactiveWrapper),
-                    this.rawInstance.$,
+                    this.rawInstance ? (this.rawInstance as Vue).$ : undefined,
                 ))
             ;
         }
@@ -349,7 +374,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 // watch target can be a getter function. So, define one to read from the reactive instance.
                 const watchTarget = (function (instance, propertyName) {
                     return function getPropertyValueForWatcher() { return instance[propertyName]; };
-                })(this.reactiveWrapper, watchName);
+                })(this.reactiveWrapper as unknown as { [key: string | symbol]: unknown; }, watchName);
 
                 for (let i=0; i < watchSpecs.length; i++) {
                     const currentWatchSpec = watchSpecs[i];
@@ -361,6 +386,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                         let handler: WatchCallback | undefined = undefined;
                         let handlerName: string | undefined = undefined;
                         let watchOptions: WatchOptions = {};
+                        const instance = this.rawInstance as unknown as { [key: string | symbol]: unknown; } | undefined;
 
                         if (typeof currentWatchSpec === "object") {
                             watchOptions = currentWatchSpec;
@@ -385,7 +411,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                                 );
                             }
 
-                            else if (typeof this.rawInstance[handlerName] !== "function") {
+                            else if (instance !== undefined && typeof instance[handlerName] !== "function") {
                                 throw new Error(
                                     `Invalid watcher defined!
                                     The named handler '${handlerName}' for watched property '${watchName}'
@@ -395,7 +421,9 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
                             handler = (function createWatchHandler(propToCall): WatchCallback {
                                 return function watchHandlerAsName(this: Vue, ...args: unknown[]) {
-                                    return this[propToCall].call(this, ...args);
+                                    return (
+                                        (this as IndexableReturnsAny<Vue>)[propToCall] as ((...args: unknown[]) => void)
+                                    ).call(this, ...args);
                                 };
                             })(handlerName).bind(reactiveInstance);
                         }
@@ -443,11 +471,16 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     private _checkValidInstanceAndThrowError(): void {
-        if (this._rawInstance === undefined) {
-            throw new Error(
-                "Failed to build component! No instance has been created yet. " +
-                "Please call 'createAndUseNewInstance()' first!",
-            );
+        if (this.instance === undefined) {
+            this.createAndUseNewInstance();
+
+            // check whether this was successful
+            if (this.instance === undefined) {
+                throw new Error(
+                    "Failed to build component! No instance has been created yet. " +
+                    "Please call 'createAndUseNewInstance()' first!",
+                );
+            }
         }
     }
 }
@@ -456,10 +489,10 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 // kept alive by any memory ties from the function's internal scope to the builder.
 function createVueRenderContext<T extends Vue>(instance: T, reactiveProxy: UnwrapNestedRefs<Vue>): T {
     if (typeof instance === "object") {
-        const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance as AnyClass<T>);
+        const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance as unknown as AnyClass<T>);
 
         return new Proxy(reactiveProxy, {
-            get(target: Record<string | symbol, unknown>, key: string | symbol): any {
+            get(target: Record<string | symbol, unknown>, key: string | symbol): unknown {
                 const value = target[key];
                 // if the value is a function, bind "this" context to the target. Vue does not do this on the
                 // render context created from this proxy.
