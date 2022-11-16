@@ -79,3 +79,7 @@ export interface VueClassComponent<V extends Vue = VueBase> extends VueClass<V> 
      */
     beforeCreate?(this: ComponentInternalInstance): void;
 }
+
+export function isVueClassComponent<V extends Vue = Vue>(v: unknown): v is VueClass<V> {
+    return (typeof v === "object") && !!((v as VueClass<V>)?.__vccOpts);
+}
