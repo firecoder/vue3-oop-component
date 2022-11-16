@@ -164,7 +164,7 @@ export function createVccOptions<V extends Vue = Vue>(
         enumerable: true,
     });
 
-    // render function is assigned later via SFC to this options. For non-SFC, link to "render" hook instead.
+    // render function is assigned later via SFC to these options. For non-SFC, link to "render" hook instead.
     vccOpts.render = function customRenderHook(...args: unknown[]) {
         // this heavily depends on Vue 3 internal data and render call convention and might break with changes there!
         // find the true instance in the list of arguments
