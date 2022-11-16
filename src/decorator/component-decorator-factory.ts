@@ -144,7 +144,8 @@ export function createVccOptions<V extends Vue = Vue>(
     ;
 
     // add the options and "setup" function for Vue 3
-    const vccOpts = {
+    const vccOpts = component.__vccOpts = {
+        ...component.__vccOpts,
         name,
         setup: generateSetupFunction(component),
         __component_decorator_original_options: options,
