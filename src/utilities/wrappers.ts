@@ -11,7 +11,7 @@
 export function generateMultiFunctionWrapper(...wrappedFunctions: ((...args: unknown[]) => unknown)[]) {
     wrappedFunctions = (wrappedFunctions || []).filter((func) => func && typeof func === "function");
 
-    return function callAllWrappedFunctions(...args: unknown[]): unknown {
+    return function callAllWrappedFunctions(this: unknown,  ...args: unknown[]): unknown {
         let returnValue;
         if (Array.isArray(wrappedFunctions) && wrappedFunctions.length > 0) {
             returnValue = wrappedFunctions[0].apply(this, args);

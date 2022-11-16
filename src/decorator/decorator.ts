@@ -57,8 +57,8 @@ export function createDecorator<V extends Vue = Vue>(
     ) {
 
         const ConstructorFunc = typeof target === "function"
-            ? target
-            : target.constructor as DecoratedClass<V>
+            ? target as DecoratedClass<V>
+            : (target as { constructor: DecoratedClass<V> }).constructor
         ;
 
         if (!Object.hasOwn(ConstructorFunc, "__decorators__") || !ConstructorFunc.__decorators__) {
