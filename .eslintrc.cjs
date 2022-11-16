@@ -20,7 +20,7 @@ module.exports = {
         "no-multiple-empty-lines": ["error", { max: 2, maxEOF: 0, maxBOF: 0 }],
         "import/no-duplicates": ["off"],                                         // to allow separate type import
         "padded-blocks": ["off"],
-        "quotes": ["error", "double", { "allowTemplateLiterals": true }],
+        "quotes": ["error", "double", { allowTemplateLiterals: true }],
         "quote-props": ["error", "consistent-as-needed"],
         "semi": ["error", "always"],
         "space-before-function-paren": ["error", {
@@ -39,12 +39,12 @@ module.exports = {
             },
         },
         {
-            "files": [
-                "cypress/integration/**.spec.{js,ts,jsx,tsx}"
+            files: [
+                "cypress/integration/**.spec.{js,ts,jsx,tsx}",
             ],
-            "extends": [
-                "plugin:cypress/recommended"
-            ]
-        }
+            extends: [
+                "plugin:cypress/recommended",
+            ],
+        },
     ],
 };
