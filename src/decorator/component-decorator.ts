@@ -1,7 +1,7 @@
 // taken and adapted from here:
 // https://raw.githubusercontent.com/vuejs/vue-class-component/d54490bf603bfbff6dd50f967ba8bacbb76b2c5a/src/index.ts
 
-import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
+import type { CompatibleComponentOptions, Vue, VueClass, VueConstructor } from "../vue";
 import type { ComponentWithCustomSetup, VueClassComponent } from "./component-decorator-types";
 import { componentFactory } from "./component-decorator-factory";
 
@@ -17,10 +17,12 @@ import { componentFactory } from "./component-decorator-factory";
  */
 function Component<V extends Vue = Vue>(
     options: CompatibleComponentOptions<V> & ThisType<V>,
-): <VC extends VueClass<V>>(target: VC) => VC & VueClassComponent<V>;
+): ((Component: VueClass<V>) => VueClassComponent<V>);
 
-function Component<VC extends ComponentWithCustomSetup>(target: VC): VC & VueClassComponent;
-function Component(options: ComponentWithCustomSetup | CompatibleComponentOptions<Vue>): unknown {
+function Component<V extends Vue = Vue>(target?: VueConstructor<V>): VueClassComponent<V>;
+function Component<V extends Vue = Vue>(
+    options?: ComponentWithCustomSetup<V> | CompatibleComponentOptions<V>,
+): ((Component: VueClass<V>) => VueClassComponent<V>) | VueClassComponent<V> {
     // the decorator is used without options directly as decorator function
     if (typeof options === "function") {
         const Component = options;
