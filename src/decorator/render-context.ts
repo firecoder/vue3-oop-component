@@ -1,8 +1,14 @@
+import type { ReactiveFlags } from "vue";
+
 import { toRaw } from "vue";
 import { isReservedPrefix } from "../vue";
 import {
     getAllInheritedPropertiesFromPrototypeChain,
 } from "../utilities/traverse-prototype";
+
+
+// the property name for RAW values of reactive objects.
+const ReactiveRawProperty: ReactiveFlags.RAW | string = "__v_raw";
 
 /**
  * Convert a component instance into a render context for Vue 3.
@@ -54,6 +60,11 @@ export function createVueRenderContext<T extends object>(instance: T): T {
                 // However, do not bind member functions of the "Object" base class.
                 if (typeof value === "function" && !Object.hasOwn(Object.prototype, key)) {
                     return value.bind(receiver);
+
+                } else if (value !== null && typeof value === "object" && key === ReactiveRawProperty) {
+                    // if someone tries to access the raw instance of a reactive one, then wrap the raw
+                    // instance as well to make it work with Vue and the template engine.
+                    return createVueRenderContext(value);
 
                 } else {
                     return value;
