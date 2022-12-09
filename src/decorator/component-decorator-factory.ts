@@ -73,11 +73,16 @@ export function componentFactory<V extends Vue = Vue>(
         // some decorators, like vue-debounce-decorator need access to the component methods, to replace them.
         const originalMethods = options.methods || {};
         const classMethods = getInstanceMethodsFromClass(component);
+
+        // newly assigned methods to option.methods will be stored in "originalMethods" by the proxy.
+        // unassigned methods will be read from "classMethods".
         options.methods = createProxyRedirectReads(originalMethods, classMethods) as DefaultMethods<V>;
 
         // call all decorators now
         decorators.forEach((decoratorFunction) => decoratorFunction(options));
 
+        // "originalMethods" holds all original methods + newly assigned methods now. Reset the options
+        // to hold only these instead of ALL methods.
         options.methods = originalMethods;
     }
 
