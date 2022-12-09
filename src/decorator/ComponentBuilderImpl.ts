@@ -11,7 +11,7 @@ import type {
 import type { IComponentBuilder } from "./IComponentBuilder";
 import type { VueClassComponent } from "./component-decorator-types";
 
-import { reactive, toRaw } from "vue";
+import { isReactive, reactive, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import { $lifeCycleHookRegisterFunctions, isNotInternalHookName } from "./life-cycle-hooks";
 import {
@@ -86,9 +86,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         }
 
         if (typeof newInstance === "object") {
-            const rawInstance = toRaw(newInstance);
-            this._rawInstance = rawInstance;
-            this._reactiveWrapper = reactive(rawInstance as Vue);
+            this._rawInstance = isReactive(newInstance) ? toRaw(newInstance) : newInstance;
+            this._reactiveWrapper = isReactive(newInstance) ? newInstance : reactive(newInstance as Vue);
 
             // a new instance has been set, so all watchers need to be re-assigned, too.
             this._hasBeenFinalised = false;
