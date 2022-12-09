@@ -154,4 +154,36 @@ describe("getAllInheritedPropertiesFromPrototypeChain", () => {
         const allPropertyKeys = Object.getOwnPropertyNames(allProperties);
         expect(allPropertyKeys).toContain("someProp");
     });
+
+    it("collecting properties of plain Object ignores default props of 'Object' base class", () => {
+        const allProperties = getAllInheritedPropertiesFromPrototypeChain({});
+        const allPropertyKeys = Object.getOwnPropertyNames(allProperties);
+
+        // do not include properties from the Object's prototype
+        for (const defaultClassProp of Object.getOwnPropertyNames(Object.prototype)) {
+            expect(allPropertyKeys).not.toContain(defaultClassProp);
+        }
+
+        // do not include properties from the Object itself
+        for (const defaultClassProp of Object.getOwnPropertyNames(Object)) {
+            expect(allPropertyKeys).not.toContain(defaultClassProp);
+        }
+    });
+
+    it("collecting properties of simple class ignores default props of 'Object' base class", () => {
+        class TestClass { }
+
+        const allProperties = getAllInheritedPropertiesFromPrototypeChain(TestClass);
+        const allPropertyKeys = Object.getOwnPropertyNames(allProperties);
+
+        // do not include properties from the Object's prototype
+        for (const defaultClassProp of Object.getOwnPropertyNames(Object.prototype)) {
+            expect(allPropertyKeys).not.toContain(defaultClassProp);
+        }
+
+        // do not include properties from the Object itself
+        for (const defaultClassProp of Object.getOwnPropertyNames(Object)) {
+            expect(allPropertyKeys).not.toContain(defaultClassProp);
+        }
+    });
 });

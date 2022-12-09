@@ -183,7 +183,9 @@ export function getAllInheritedPropertiesFromPrototypeChain(
     instance: AnyClass | AnyInstance,
 ): Record<string | symbol, PropertyDescriptor> {
     const allProperties = {} as Record<string | symbol, PropertyDescriptor>;
-    if (!instance) {
+    if (!instance || instance.constructor === Object) {
+        // if the instance is a simple, plain object without a class, just ignore it as no properties
+        // are inherited.
         return allProperties;
     }
 
