@@ -10,14 +10,12 @@ import type {
 } from "../vue";
 import type { IComponentBuilder } from "./IComponentBuilder";
 import type { VueClassComponent } from "./component-decorator-types";
-import type { AnyClass } from "../utilities/traverse-prototype";
 
 import { reactive, toRaw } from "vue";
-import { CompositionApi, isReservedPrefix } from "../vue";
+import { CompositionApi } from "../vue";
 import { $lifeCycleHookRegisterFunctions, isNotInternalHookName } from "./life-cycle-hooks";
 import {
     collectStaticPropertyFromPrototypeChain,
-    getAllInheritedPropertiesFromPrototypeChain,
 } from "../utilities/traverse-prototype";
 
 /*
@@ -115,15 +113,7 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
         this._hasBeenFinalised = true;
 
         this._createAllWatchers();
-
-        // because Vue checks only for "own properties" in the return value, an intermediate class is needed to contain
-        // all properties and all inherited functions as "own properties".
-        // see: https://github.com/vuejs/core/blob/8dcb6c7bbdd2905469e2bb11dfff27b58cc784b2/packages/runtime-core/src/componentPublicInstance.ts#L265
-        if (this.rawInstance !== undefined && this.reactiveWrapper !== undefined) {
-            return createVueRenderContext<T>(this.rawInstance, this.reactiveWrapper);
-        } else {
-            throw new Error("Check for valid instance failed!");
-        }
+        return this.reactiveWrapper;
     }
 
     /** @inheritdoc */
@@ -482,54 +472,5 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 );
             }
         }
-    }
-}
-
-// the function is defined outside the builder to ensure, the scope of the builder instance is not
-// kept alive by any memory ties from the function's internal scope to the builder.
-function createVueRenderContext<T extends Vue>(instance: T, reactiveProxy: UnwrapNestedRefs<Vue>): T {
-    if (typeof instance === "object") {
-        const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance as unknown as AnyClass<T>);
-
-        return new Proxy(reactiveProxy, {
-            get(target: Record<string | symbol, unknown>, key: string | symbol): unknown {
-                const value = target[key];
-                // if the value is a function, bind "this" context to the target. Vue does not do this on the
-                // render context created from this proxy.
-                if (typeof value === "function") {
-                    return value.bind(target);
-                } else {
-                    return value;
-                }
-            },
-
-            getOwnPropertyDescriptor(target: object, key: string | symbol): PropertyDescriptor | undefined {
-                // ignore reserved Vue properties
-                if (isReservedPrefix(key)) {
-                    return undefined;
-                }
-
-                return Object.getOwnPropertyDescriptor(target, key) ??
-                    Object.getOwnPropertyDescriptor(inheritedProperties, key)
-                ;
-            },
-
-            has(target: object, key: string | symbol): boolean {
-                return !isReservedPrefix(key) && (key in target || key in inheritedProperties);
-            },
-
-            ownKeys(target: object): ArrayLike<string | symbol> {
-                return ([] as (string | symbol)[])
-                    .concat(Object.getOwnPropertyNames(target))
-                    .concat(Object.getOwnPropertySymbols(target))
-                    .concat(Object.getOwnPropertyNames(inheritedProperties))
-                    .concat(Object.getOwnPropertySymbols(inheritedProperties))
-                    .filter((key) => !isReservedPrefix(key))
-                ;
-            },
-        }) as T;
-
-    } else {
-        throw new Error("Cannot create a proxy of a non-object instance!");
     }
 }

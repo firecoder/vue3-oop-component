@@ -34,6 +34,7 @@ import { generateMultiFunctionWrapper } from "../utilities/wrappers";
 import { $internalHookNames } from "./life-cycle-hooks";
 import { ComponentBuilderImpl } from "./ComponentBuilderImpl";
 import { clearCurrentSetupContext, setCurrentSetupContext } from "../vue/setup-context-global-storage";
+import { createVueRenderContext } from "./render-context";
 
 
 /**
@@ -492,6 +493,6 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         }
 
         clearCurrentSetupContext();
-        return builder.build();
+        return createVueRenderContext(builder.build());
     };
 }
