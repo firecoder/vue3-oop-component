@@ -18,6 +18,7 @@ import {
     collectStaticPropertyFromPrototypeChain,
 } from "../utilities/traverse-prototype";
 
+
 /*
  * The getter and setter created here do not hold any memory context to the builder. Hence, the builder can be subject
  * to the garbage collector.
@@ -80,6 +81,10 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
     }
 
     public set instance(newInstance: T | undefined) {
+        if (this._rawInstance !== undefined && this._reactiveWrapper !== undefined) {
+            throw new Error("Do not reuse the builder! It has already built an instance!");
+        }
+
         if (typeof newInstance === "object") {
             const rawInstance = toRaw(newInstance);
             this._rawInstance = rawInstance;
@@ -87,10 +92,6 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
             // a new instance has been set, so all watchers need to be re-assigned, too.
             this._hasBeenFinalised = false;
-
-        } else {
-            this._rawInstance = undefined;
-            this._reactiveWrapper = undefined;
         }
     }
 
