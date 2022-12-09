@@ -72,11 +72,6 @@ export function createVueRenderContext<T extends object>(instance: T): T {
             },
 
             getOwnPropertyDescriptor(target: object, key: string | symbol): PropertyDescriptor | undefined {
-                // ignore reserved Vue properties
-                if (isReservedPrefix(key)) {
-                    return undefined;
-                }
-
                 // present inherited properties as "own" property
                 return Object.getOwnPropertyDescriptor(target, key) ??
                     Object.getOwnPropertyDescriptor(inheritedProperties, key)
@@ -84,7 +79,7 @@ export function createVueRenderContext<T extends object>(instance: T): T {
             },
 
             has(target: object, key: string | symbol): boolean {
-                return !isReservedPrefix(key) && (key in target || key in inheritedProperties);
+                return (key in target || key in inheritedProperties);
             },
 
             ownKeys(target: object): ArrayLike<string | symbol> {

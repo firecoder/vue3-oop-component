@@ -103,7 +103,9 @@ describe("Component():", () => {
                 vccOptions.setup({ message: "Hello World!"}, {} as SetupContext) as SimpleComponentClass :
                 undefined
             ;
-            expect(instance).not.toHaveProperty("$func");
+
+            expect(Object.getOwnPropertyNames(instance)).to.not.contain("$func");
+            expect(instance).toHaveProperty("$func");
         });
 
         it("hidden property of instance - prefixed with '$' or '_' - is still accessible",  () => {
