@@ -84,6 +84,10 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
             const rawInstance = toRaw(newInstance);
             this._rawInstance = rawInstance;
             this._reactiveWrapper = reactive(rawInstance as Vue);
+
+            // a new instance has been set, so all watchers need to be re-assigned, too.
+            this._hasBeenFinalised = false;
+
         } else {
             this._rawInstance = undefined;
             this._reactiveWrapper = undefined;
