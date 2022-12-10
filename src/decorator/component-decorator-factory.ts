@@ -276,7 +276,7 @@ export function getComputedValuesDefinitionFromComponentPrototype<V extends Vue 
 
     for (const key of allPropertyKeys) {
         if (key === "constructor" || key === "prototype") {
-            return;
+            continue;
         }
 
         // ignore all hooks
@@ -284,7 +284,7 @@ export function getComputedValuesDefinitionFromComponentPrototype<V extends Vue 
             $internalHookNames.indexOf(key) > -1
             || key.startsWith("$") // this is Vue prefix - ignore
         )) {
-            return;
+            continue;
         }
 
         // detect the computed properties.
