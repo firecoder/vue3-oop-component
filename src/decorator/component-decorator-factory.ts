@@ -25,6 +25,7 @@ import type {
 
 import { addLegacyRenderingFunctions, CompositionApi, isVueClassInstance } from "../vue";
 import {
+    collectStaticFunctionFromPrototypeChain,
     collectStaticPropertyFromPrototypeChain,
     getInstanceMethodsFromClass,
     getPropertyFromParentClassDefinition,
@@ -441,6 +442,16 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
 
         } as ComponentInternalInstance;
 
+        // call all "beforeCreate" functions
+        const allBeforeCreateFunc = collectStaticFunctionFromPrototypeChain(component, "beforeCreate");
+        if (allBeforeCreateFunc) {
+            allBeforeCreateFunc.forEach((beforeCreateFunc) => {
+                if (typeof beforeCreateFunc === "function") {
+                    beforeCreateFunc.call(vueComponentInternalInstance);
+                }
+            });
+        }
+
         // use a builder to help set up the instance
         const builder = new ComponentBuilderImpl<V>()
             .setComponentClass(component)
@@ -449,13 +460,6 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
 
         // read all the options from the instance - these are still there after any mixin
         const allOptions = builder.getOptionsForComponent();
-
-        // call all "beforeCreate" functions
-        allOptions.forEach((options) => {
-            if (typeof options?.beforeCreate === "function") {
-                options.beforeCreate.call(vueComponentInternalInstance);
-            }
-        });
 
         // assign the current Vue component instance in case the base constructor has not been called properly!
         if (builder.rawInstance !== undefined) {
