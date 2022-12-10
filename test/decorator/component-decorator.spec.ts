@@ -51,17 +51,19 @@ describe("Component():", () => {
     });
 
     it("SFC exported, decorated class component provides properties",  () => {
-        const ClassComponent = (MessageTextAsDecoratedClass as unknown as VueClassComponent["__vccOpts"]);
-        expect(ClassComponent.render).not.toBeUndefined();
-        expect(ClassComponent.render).toBeTypeOf("function");
+        const ClassComponent = (MessageTextAsDecoratedClass as unknown as VueClassComponent);
+        expect(ClassComponent.__vccOpts.render).not.toBeUndefined();
+        expect(ClassComponent.__vccOpts.render).toBeTypeOf("function");
 
-        expect(ClassComponent.props).toBeTypeOf("object");
-        expect(ClassComponent.props.message).toBeTypeOf("object");
-        expect(ClassComponent.props.message).toEqual({});
+        expect(ClassComponent.__vccOpts.props).toBeTypeOf("object");
+        expect(ClassComponent.__vccOpts.props.message).toBeTypeOf("object");
+        expect(ClassComponent.__vccOpts.props.message).toEqual({});
 
-        const instance = ClassComponent.setup ?
-            ClassComponent.setup({ message: "Hello World!"}, {} as SetupContext) as MessageTextAsDecoratedClass :
-            undefined
+        const instance = ClassComponent.__vccOpts.setup ?
+            ClassComponent.__vccOpts.setup(
+                { message: "Hello World!"},
+                {} as SetupContext,
+            ) as MessageTextAsDecoratedClass : undefined
         ;
 
         expect(instance).toBeTypeOf("object");

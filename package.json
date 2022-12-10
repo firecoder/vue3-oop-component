@@ -36,6 +36,7 @@
     "@babel/types": "^7.18.8",
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
+    "@firecoder-com/vite-plugin-vue-oop": "^1.0.1",
     "@rushstack/eslint-patch": "^1.1.4",
     "@types/jsdom": "^16.2.14",
     "@types/node": "^18.0.4",
