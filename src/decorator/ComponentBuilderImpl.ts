@@ -136,7 +136,15 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
 
             if (data && typeof data === "object") {
                 Object.getOwnPropertyNames(data)
-                    .forEach((key) => Object.defineProperty(this.rawInstance, key, { value: data[key]}))
+                    .forEach((key) => Object.defineProperty(
+                        this.rawInstance,
+                        key,
+                        {
+                            configurable: true,
+                            enumerable: true,
+                            value: data[key],
+                        },
+                    ))
                 ;
             }
         }
@@ -456,6 +464,8 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
             // later. The watcher still holds a reference to the previous reactive property.
 
             Object.defineProperty(this.rawInstance, property, {
+                configurable: true,
+                enumerable: true,
                 get: createReferenceGetterFunc(vueReference).bind(this.reactiveWrapper),
                 set: hasSetter ? createReferenceSetterFunc(vueReference).bind(this.reactiveWrapper) : undefined,
             });
