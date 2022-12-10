@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "vitest";
 import {
     collectStaticFunctionFromPrototypeChain,
@@ -25,7 +26,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
             }
         }
 
-        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass, "testFunction");
+        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass as any, "testFunction");
         expect(collectedFunctions.length).toEqual(0);
     });
 
@@ -46,7 +47,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
             }
         }
 
-        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass, "testFunction");
+        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass as any, "testFunction");
         expect(collectedFunctions.length).toEqual(0);
         expect(new BaseClass1().testFunction()).toEqual("test");
         expect(new BaseClass2().testFunction()).toEqual("test 1 ");
@@ -71,7 +72,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
             return (BaseClass2.prototype as unknown as ObjWithTestFunc).testFunction.call(this) + " 2 ";
         };
 
-        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass, "testFunction");
+        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass as any, "testFunction");
         expect(collectedFunctions.length).toEqual(0);
         expect((new BaseClass1() as ObjWithTestFunc).testFunction()).toEqual("test");
         expect((new BaseClass2() as ObjWithTestFunc).testFunction()).toEqual("test 1 ");
@@ -140,7 +141,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
             return "test2";
         };
 
-        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass, "testFunction");
+        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass as any, "testFunction");
         expect(collectedFunctions.length).toEqual(1);
         expect(collectedFunctions[0]()).toEqual("test2");
     });
@@ -160,7 +161,7 @@ describe("collectFunctionFromPrototypeChain(): Test collecting functions from pr
             return "test2a";
         };
 
-        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass, "testFunction");
+        const collectedFunctions = collectStaticFunctionFromPrototypeChain(TestClass as any, "testFunction");
         expect(collectedFunctions.length).toEqual(2);
         expect(collectedFunctions[0]()).toEqual("test1");
         expect(collectedFunctions[1]()).toEqual("test2a");

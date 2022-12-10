@@ -5,9 +5,8 @@ export type AnyInstance<T = any> = Record<string | symbol, T>;
 
 // see: https://stackoverflow.com/questions/39392853/is-there-a-type-for-class-in-typescript-and-does-any-include-it
 // https://github.com/angular/angular/blob/main/packages/core/src/interface/type.ts
-export interface AnyClass<T = any> {
+export interface AnyClass<T = any> extends Record<string | symbol, unknown> {
     new(...args: any[]): AnyInstance<T>;
-    [prop: string | symbol]: unknown;
 }
 
 export function toClass<C>(clazz: AnyClass<C> | AnyInstance<C>): AnyClass<C> {
@@ -92,9 +91,9 @@ export function collectStaticPropertyFromPrototypeChain<T>(
  * @param clazz the class to collect static functions from and its prototype chain.
  * @param funcName the name of functions to collect.
  */
-export function collectStaticFunctionFromPrototypeChain<T = AnyFunction>(
-    clazz: AnyClass | AnyInstance,
-    funcName: string,
+export function collectStaticFunctionFromPrototypeChain<C, T = AnyFunction>(
+    clazz: C & (AnyClass | AnyInstance),
+    funcName: keyof C & (string | symbol),
 ): T[] {
 
     return collectStaticPropertyFromPrototypeChain<T>(clazz, funcName)
