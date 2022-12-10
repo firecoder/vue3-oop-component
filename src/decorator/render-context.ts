@@ -84,7 +84,7 @@ export function createVueRenderContext<T extends object>(instance: T): T {
 
             ownKeys(target: object): ArrayLike<string | symbol> {
                 // present inherited properties as "own" property
-                return ([] as (string | symbol)[])
+                const keys = ([] as (string | symbol)[])
                     .concat(Object.getOwnPropertyNames(target))
                     .concat(Object.getOwnPropertySymbols(target))
                     .concat(Object.getOwnPropertyNames(inheritedProperties))
@@ -93,6 +93,9 @@ export function createVueRenderContext<T extends object>(instance: T): T {
                     // hide properties with reserved prefixes
                     .filter((key) => !isReservedPrefix(key))
                 ;
+
+                // make values unique
+                return Array.from(new Set(keys));
             },
         }) as T;
 
