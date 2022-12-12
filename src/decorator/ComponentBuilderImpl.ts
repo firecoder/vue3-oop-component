@@ -477,12 +477,12 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                                         (this as IndexableReturnsAny<Vue>)[propToCall] as ((...args: unknown[]) => void)
                                     ).call(this, ...args);
                                 };
-                            })(handlerName).bind(reactiveInstance);
+                            })(handlerName);
                         }
 
                         if (handler) {
                             try {
-                                CompositionApi.watch(watchTarget, handler, watchOptions);
+                                CompositionApi.watch(watchTarget, handler.bind(reactiveInstance), watchOptions);
                             } catch(error) {
                                 console.error(
                                     `Failed to create watcher on property ${watchName}`,

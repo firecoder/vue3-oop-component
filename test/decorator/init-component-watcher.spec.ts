@@ -128,6 +128,23 @@ describe("watcherForPropertyChange():", () => {
         expect(watcher.propToWatch.firstCall.thisValue).toBe(builder.reactiveWrapper);
     });
 
+    it("Watcher handler function is called with proper 'this' context", async () => {
+
+        const watcher = {
+            propToWatch: {
+                handler: sinon.spy(),
+            },
+        };
+
+        const builder = new ComponentBuilderImpl({ propToWatch: "initial value" } as Vue);
+        builder.watcherForPropertyChange(watcher);
+        builder.build();
+        builder.reactiveWrapper.propToWatch = "new value";
+
+        await WaitForTriggerToTakeEffect();
+
+        expect(watcher.propToWatch.handler.firstCall.thisValue).toBe(builder.reactiveWrapper);
+    });
 
     it("Watch with multiple callback functions", async () => {
         const watcher = {
