@@ -5,7 +5,7 @@
  * @see: https://github.com/vuejs/vue-class-component/blob/next/src/vue.ts
  */
 import type { CompatibleComponentOptions, Vue, VueClass } from "../vue";
-export declare type VueDecorator = ClassDecorator | PropertyDecorator | MethodDecorator | ParameterDecorator;
+export type VueDecorator = ClassDecorator | PropertyDecorator | MethodDecorator | ParameterDecorator;
 /**
  * Legacy definition of a decorated class for compatibility reasons.
  *
@@ -17,7 +17,7 @@ export declare type VueDecorator = ClassDecorator | PropertyDecorator | MethodDe
  *     better choice for class based components but need to define and detect the list of properties upfront.
  * </p>
  */
-export declare type DecoratedClass<V extends Vue = Vue> = VueClass<V> & {
+export type DecoratedClass<V extends Vue = Vue> = VueClass<V> & {
     __decorators__?: ((options: CompatibleComponentOptions<V>) => void)[];
 };
 export declare function createDecorator<V extends Vue = Vue>(callback: (options: CompatibleComponentOptions<V>) => void): ClassDecorator;

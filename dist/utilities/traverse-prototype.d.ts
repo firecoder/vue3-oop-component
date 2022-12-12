@@ -1,8 +1,7 @@
-export declare type AnyFunction = (...args: any[]) => any;
-export declare type AnyInstance<T = any> = Record<string | symbol, T>;
-export interface AnyClass<T = any> {
+export type AnyFunction = (...args: any[]) => any;
+export type AnyInstance<T = any> = Record<string | symbol, T>;
+export interface AnyClass<T = any> extends Record<string | symbol, unknown> {
     new (...args: any[]): AnyInstance<T>;
-    [prop: string | symbol]: unknown;
 }
 export declare function toClass<C>(clazz: AnyClass<C> | AnyInstance<C>): AnyClass<C>;
 /**
@@ -32,7 +31,7 @@ export declare function collectStaticPropertyFromPrototypeChain<T>(clazz: AnyCla
  * @param clazz the class to collect static functions from and its prototype chain.
  * @param funcName the name of functions to collect.
  */
-export declare function collectStaticFunctionFromPrototypeChain<T = AnyFunction>(clazz: AnyClass | AnyInstance, funcName: string): T[];
+export declare function collectStaticFunctionFromPrototypeChain<C, T = AnyFunction>(clazz: C & (AnyClass | AnyInstance), funcName: keyof C & (string | symbol)): T[];
 /**
  * Get the named property from the parent instance.
  *

@@ -1,6 +1,6 @@
 import type { ComponentInternalInstance, ComponentOptionsWithObjectProps } from "vue";
 import type { CompatibleComponentOptions, Vue, VueBase, VueClass } from "../vue";
-export declare type ComponentOptions<V extends Vue> = CompatibleComponentOptions<V>;
+export type ComponentOptions<V extends Vue> = CompatibleComponentOptions<V>;
 /**
  * The component decorator may be configured by passing in some configuration data.
  */
@@ -10,7 +10,7 @@ export interface ComponentConfiguration {
 /**
  * A custom component setup function/method that will be called once at the very end of the setup.
  */
-export declare type CustomComponentSetupFunction<V extends Vue> = Pick<CompatibleComponentOptions<V>, "setup">["setup"];
+export type CustomComponentSetupFunction<V extends Vue> = Pick<CompatibleComponentOptions<V>, "setup">["setup"];
 /**
  * This is the component setup functions that is used to create the instance from the class component.
  *
@@ -19,7 +19,7 @@ export declare type CustomComponentSetupFunction<V extends Vue> = Pick<Compatibl
  *     between the Vue internal component and the class component, like computed values, watchers, reactivity, etc.
  * </p>
  */
-export declare type VueComponentSetupFunction = Pick<ComponentOptionsWithObjectProps, "setup">["setup"];
+export type VueComponentSetupFunction = Pick<ComponentOptionsWithObjectProps, "setup">["setup"];
 /**
  * A class providing the custom setup function to the component decorator.
  */

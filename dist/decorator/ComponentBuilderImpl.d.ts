@@ -41,6 +41,8 @@ export declare class ComponentBuilderImpl<T extends Vue> implements IComponentBu
     /** @inheritdoc */
     injectData(injectDefinitions?: CompatibleComponentOptions<T>["inject"]): ComponentBuilderImpl<T>;
     /** @inheritdoc */
+    makeValuePropertiesReactive(): IComponentBuilder<T>;
+    /** @inheritdoc */
     provideData(providedValuesSpec?: CompatibleComponentOptions<T>["provide"]): ComponentBuilderImpl<T>;
     /** @inheritdoc */
     registerLifeCycleHooks(): IComponentBuilder<T>;

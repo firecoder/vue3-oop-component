@@ -8,7 +8,7 @@ import type { ComponentPublicInstance, ComponentInternalInstance, DefineComponen
 import type { CompatibleComponentOptions } from "./legacy-component-options";
 import type { Constructor } from "./basic-types";
 import { h } from "vue";
-export declare type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
+export type PublicProps = VNodeProps & AllowedComponentProps & ComponentCustomProps;
 export interface ClassComponentHooks {
     data?(): object;
     beforeCreate?(): void;
@@ -25,11 +25,11 @@ export interface ClassComponentHooks {
     errorCaptured?(err: Error, vm: Vue, info: string): boolean | undefined;
     serverPrefetch?(): Promise<unknown>;
 }
-export declare type Vue<Props extends ComponentPropsOptions = any> = CreateComponentPublicInstance<Props> & ClassComponentHooks;
-export declare type VueBase = Vue;
-export declare type VueConstructor<V extends Vue = VueBase> = Constructor<V>;
-export declare type VueClass<V extends Vue = VueBase> = Omit<DefineComponent<{}, V>, "setup"> & VueConstructor<V>;
-export declare type IndexableReturnsAny<T> = Record<string | symbol, unknown> & T;
+export type Vue<Props extends ComponentPropsOptions = any> = CreateComponentPublicInstance<Props> & ClassComponentHooks;
+export type VueBase = Vue;
+export type VueConstructor<V extends Vue = VueBase> = Constructor<V>;
+export type VueClass<V extends Vue = VueBase> = Omit<DefineComponent<{}, V>, "setup"> & VueConstructor<V>;
+export type IndexableReturnsAny<T> = Record<string | symbol, unknown> & T;
 /**
  * This is the base implementation of class component instances implementing interface {@code Vue}.
  *

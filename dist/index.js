@@ -57,13 +57,17 @@ function addLegacyRenderingFunctions(vue) {
     "_g",
     "_d",
     "_p"
-  ].forEach((name) => Object.defineProperty(target, name, {
-    get: function() {
-      return getFunctionFromCompatOrThrowError(this, name);
-    },
-    enumerable: false,
-    configurable: true
-  }));
+  ].forEach((name) => Object.defineProperty(
+    target,
+    name,
+    {
+      get: function() {
+        return getFunctionFromCompatOrThrowError(this, name);
+      },
+      enumerable: false,
+      configurable: true
+    }
+  ));
   return target;
 }
 function MixinCustomRender(componentClass) {
@@ -279,6 +283,9 @@ function collectStaticPropertyFromPrototypeChain(clazz, property) {
   }
   return (getAllBaseClasses(clazz, true) || []).filter((parentClass) => Object.hasOwn(parentClass, property)).map((parentClass) => parentClass[property]);
 }
+function collectStaticFunctionFromPrototypeChain(clazz, funcName) {
+  return collectStaticPropertyFromPrototypeChain(clazz, funcName).filter((propertyValue) => typeof propertyValue === "function");
+}
 function getPropertyFromParentClassDefinition(clazz, property) {
   if (!clazz) {
     return void 0;
@@ -313,7 +320,7 @@ function getInstanceMethodsFromClass(clazz) {
 }
 function getAllInheritedPropertiesFromPrototypeChain(instance) {
   const allProperties = {};
-  if (!instance) {
+  if (!instance || instance.constructor === Object) {
     return allProperties;
   }
   const allClasses = getAllBaseClasses(instance, true);
@@ -437,13 +444,13 @@ class ComponentBuilderImpl {
     return this.reactiveWrapper;
   }
   set instance(newInstance) {
+    if (this._rawInstance !== void 0 && this._reactiveWrapper !== void 0) {
+      throw new Error("Do not reuse the builder! It has already built an instance!");
+    }
     if (typeof newInstance === "object") {
-      const rawInstance = toRaw(newInstance);
-      this._rawInstance = rawInstance;
-      this._reactiveWrapper = reactive(rawInstance);
-    } else {
-      this._rawInstance = void 0;
-      this._reactiveWrapper = void 0;
+      this._rawInstance = isReactive(newInstance) ? toRaw(newInstance) : newInstance;
+      this._reactiveWrapper = isReactive(newInstance) ? newInstance : reactive(newInstance);
+      this._hasBeenFinalised = false;
     }
   }
   get rawInstance() {
@@ -455,16 +462,14 @@ class ComponentBuilderImpl {
   build() {
     this._checkValidInstanceAndThrowError();
     if (this._hasBeenFinalised) {
-      CompositionApi.warn(`ComponentBuilder's "build()" function has already been called!
-                Calling a second time risks errors with watchers!`);
+      CompositionApi.warn(
+        `ComponentBuilder's "build()" function has already been called!
+                Calling a second time risks errors with watchers!`
+      );
     }
     this._hasBeenFinalised = true;
     this._createAllWatchers();
-    if (this.rawInstance !== void 0 && this.reactiveWrapper !== void 0) {
-      return createVueRenderContext(this.rawInstance, this.reactiveWrapper);
-    } else {
-      throw new Error("Check for valid instance failed!");
-    }
+    return this.reactiveWrapper;
   }
   applyDataValues(dataValues) {
     this._checkValidInstanceAndThrowError();
@@ -476,7 +481,15 @@ class ComponentBuilderImpl {
         data = dataValues;
       }
       if (data && typeof data === "object") {
-        Object.getOwnPropertyNames(data).forEach((key) => Object.defineProperty(this.rawInstance, key, { value: data[key] }));
+        Object.getOwnPropertyNames(data).forEach((key) => Object.defineProperty(
+          this.rawInstance,
+          key,
+          {
+            configurable: true,
+            enumerable: true,
+            value: data[key]
+          }
+        ));
       }
     }
     return this;
@@ -489,12 +502,20 @@ class ComponentBuilderImpl {
     Object.getOwnPropertyNames(computedValues || {}).filter(isNotInternalHookName).forEach((key) => {
       const computedSpec = computedValues[key];
       if (typeof computedSpec === "function") {
-        this._defineReactiveProperty(key, CompositionApi.computed(computedSpec.bind(this.reactiveWrapper)), false);
+        this._defineReactiveProperty(
+          key,
+          CompositionApi.computed(computedSpec.bind(this.reactiveWrapper)),
+          false
+        );
       } else if (computedSpec && typeof computedSpec === "object" && typeof computedSpec.get === "function" && typeof computedSpec.set === "function") {
-        this._defineReactiveProperty(key, CompositionApi.computed({
-          get: computedSpec.get.bind(this.reactiveWrapper),
-          set: computedSpec.set.bind(this.reactiveWrapper)
-        }), true);
+        this._defineReactiveProperty(
+          key,
+          CompositionApi.computed({
+            get: computedSpec.get.bind(this.reactiveWrapper),
+            set: computedSpec.set.bind(this.reactiveWrapper)
+          }),
+          true
+        );
       } else {
         const jsonDebug = JSON.stringify(computedSpec, void 0, 4);
         CompositionApi.warn(`Invalid "computed" specification for property ${key}: ${jsonDebug}`);
@@ -503,7 +524,10 @@ class ComponentBuilderImpl {
     return this;
   }
   getOptionsForComponent() {
-    let allOptions = (this._component && collectStaticPropertyFromPrototypeChain(this._component, "__vccOpts") || []).map((vccOptions) => vccOptions.__component_decorator_original_options).filter((options) => !!options);
+    let allOptions = (this._component && collectStaticPropertyFromPrototypeChain(
+      this._component,
+      "__vccOpts"
+    ) || []).map((vccOptions) => vccOptions.__component_decorator_original_options).filter((options) => !!options);
     if (!(allOptions == null ? void 0 : allOptions.length) && typeof this._component === "function") {
       const componentClass = this._component;
       const instance = new componentClass();
@@ -548,6 +572,34 @@ class ComponentBuilderImpl {
     }
     return this;
   }
+  makeValuePropertiesReactive() {
+    this._checkValidInstanceAndThrowError();
+    const instance = this.rawInstance;
+    const properties = Object.getOwnPropertyNames(instance) || [];
+    for (const propName of properties) {
+      const descriptor = Object.getOwnPropertyDescriptor(instance, propName);
+      if (descriptor === void 0 || descriptor.get !== void 0 || descriptor.set !== void 0) {
+        continue;
+      }
+      if (descriptor.configurable && descriptor.writable) {
+        const newDescriptor = function createReactiveWrapper(initialValue) {
+          const reactiveReference = ref(initialValue);
+          return {
+            configurable: true,
+            enumerable: true,
+            get: function getRef() {
+              return reactiveReference.value;
+            },
+            set: function setRef(newValue) {
+              reactiveReference.value = newValue;
+            }
+          };
+        }(descriptor.value);
+        Object.defineProperty(instance, propName, newDescriptor);
+      }
+    }
+    return this;
+  }
   provideData(providedValuesSpec) {
     let providedValues = providedValuesSpec;
     if (typeof providedValuesSpec === "function") {
@@ -568,7 +620,10 @@ class ComponentBuilderImpl {
     this._checkValidInstanceAndThrowError();
     const rawHookFunctions = hookFunctions && toRaw(hookFunctions) || void 0;
     if (rawHookFunctions) {
-      Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions).filter((hookName) => typeof rawHookFunctions[hookName] === "function").forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](rawHookFunctions[hookName].bind(this.reactiveWrapper), this.rawInstance ? this.rawInstance.$ : void 0));
+      Object.getOwnPropertyNames($lifeCycleHookRegisterFunctions).filter((hookName) => typeof rawHookFunctions[hookName] === "function").forEach((hookName) => $lifeCycleHookRegisterFunctions[hookName](
+        rawHookFunctions[hookName].bind(this.reactiveWrapper),
+        this.rawInstance ? this.rawInstance.$ : void 0
+      ));
     }
     return this;
   }
@@ -628,27 +683,37 @@ class ComponentBuilderImpl {
             }
             if (!handler && handlerName) {
               if (handlerName === watchName) {
-                throw new Error(`Invalid watcher defined!
-                                    Can not watch on property ${watchName} and call same property on change!`);
+                throw new Error(
+                  `Invalid watcher defined!
+                                    Can not watch on property ${watchName} and call same property on change!`
+                );
               } else if (instance !== void 0 && typeof instance[handlerName] !== "function") {
-                throw new Error(`Invalid watcher defined!
+                throw new Error(
+                  `Invalid watcher defined!
                                     The named handler '${handlerName}' for watched property '${watchName}'
-                                    is no member function of the component instance!`);
+                                    is no member function of the component instance!`
+                );
               }
               handler = function createWatchHandler(propToCall) {
                 return function watchHandlerAsName(...args) {
                   return this[propToCall].call(this, ...args);
                 };
-              }(handlerName).bind(reactiveInstance);
+              }(handlerName);
             }
             if (handler) {
               try {
-                CompositionApi.watch(watchTarget, handler, watchOptions);
+                CompositionApi.watch(watchTarget, handler.bind(reactiveInstance), watchOptions);
               } catch (error) {
-                console.error(`Failed to create watcher on property ${watchName}`, currentWatchSpec, error);
+                console.error(
+                  `Failed to create watcher on property ${watchName}`,
+                  currentWatchSpec,
+                  error
+                );
               }
             } else {
-              CompositionApi.warn(`No valid watch handler for property "${watchName}" has been provided.`);
+              CompositionApi.warn(
+                `No valid watch handler for property "${watchName}" has been provided.`
+              );
             }
           }
         }
@@ -660,6 +725,8 @@ class ComponentBuilderImpl {
     this._checkValidInstanceAndThrowError();
     if (property) {
       Object.defineProperty(this.rawInstance, property, {
+        configurable: true,
+        enumerable: true,
         get: createReferenceGetterFunc(vueReference).bind(this.reactiveWrapper),
         set: hasSetter ? createReferenceSetterFunc(vueReference).bind(this.reactiveWrapper) : void 0
       });
@@ -670,39 +737,41 @@ class ComponentBuilderImpl {
     if (this.instance === void 0) {
       this.createAndUseNewInstance();
       if (this.instance === void 0) {
-        throw new Error("Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!");
+        throw new Error(
+          "Failed to build component! No instance has been created yet. Please call 'createAndUseNewInstance()' first!"
+        );
       }
     }
   }
 }
-function createVueRenderContext(instance, reactiveProxy) {
-  if (typeof instance === "object") {
-    const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(instance);
-    return new Proxy(reactiveProxy, {
-      get(target, key) {
+const ReactiveRawProperty = "__v_raw";
+function createVueRenderContext(instance) {
+  if (instance !== null && instance !== void 0 && typeof instance === "object") {
+    const inheritedProperties = getAllInheritedPropertiesFromPrototypeChain(toRaw(instance));
+    return new Proxy(instance, {
+      get(target, key, receiver) {
         const value = target[key];
-        if (typeof value === "function") {
-          return value.bind(target);
+        if (typeof value === "function" && !Object.hasOwn(Object.prototype, key)) {
+          return value.bind(receiver);
+        } else if (value !== null && typeof value === "object" && key === ReactiveRawProperty) {
+          return createVueRenderContext(value);
         } else {
           return value;
         }
       },
       getOwnPropertyDescriptor(target, key) {
-        var _a;
-        if (isReservedPrefix(key)) {
-          return void 0;
-        }
-        return (_a = Object.getOwnPropertyDescriptor(target, key)) != null ? _a : Object.getOwnPropertyDescriptor(inheritedProperties, key);
+        return Object.getOwnPropertyDescriptor(target, key) ?? Object.getOwnPropertyDescriptor(inheritedProperties, key);
       },
       has(target, key) {
-        return !isReservedPrefix(key) && (key in target || key in inheritedProperties);
+        return key in target || key in inheritedProperties;
       },
       ownKeys(target) {
-        return [].concat(Object.getOwnPropertyNames(target)).concat(Object.getOwnPropertySymbols(target)).concat(Object.getOwnPropertyNames(inheritedProperties)).concat(Object.getOwnPropertySymbols(inheritedProperties)).filter((key) => !isReservedPrefix(key));
+        const keys = [].concat(Object.getOwnPropertyNames(target)).concat(Object.getOwnPropertySymbols(target)).concat(Object.getOwnPropertyNames(inheritedProperties)).concat(Object.getOwnPropertySymbols(inheritedProperties)).filter((key) => !isReservedPrefix(key));
+        return Array.from(new Set(keys));
       }
     });
   } else {
-    throw new Error("Cannot create a proxy of a non-object instance!");
+    return instance;
   }
 }
 function componentFactory(component, options = {}) {
@@ -721,14 +790,20 @@ function componentFactory(component, options = {}) {
   const classComponent = component;
   if (typeof options.beforeCreate === "function") {
     if (typeof classComponent.beforeCreate === "function") {
-      classComponent.beforeCreate = generateMultiFunctionWrapper(classComponent.beforeCreate, options.beforeCreate);
+      classComponent.beforeCreate = generateMultiFunctionWrapper(
+        classComponent.beforeCreate,
+        options.beforeCreate
+      );
     } else {
       classComponent.beforeCreate = options.beforeCreate;
     }
   }
   (function storeOptions(clazz, componentOptions) {
     clazz.prototype._getVueClassComponentOptions = function _getVueClassComponentOptions() {
-      const parentFunc = getPropertyFromParentClassDefinition(this, "_getVueClassComponentOptions");
+      const parentFunc = getPropertyFromParentClassDefinition(
+        this,
+        "_getVueClassComponentOptions"
+      );
       const parentOptions = typeof parentFunc === "function" ? parentFunc() || [] : [];
       return parentOptions.concat([componentOptions]);
     };
@@ -800,10 +875,10 @@ function getComputedValuesDefinitionFromComponentPrototype(component) {
   const allPropertyKeys = [].concat(Object.getOwnPropertyNames(proto)).concat(Object.getOwnPropertySymbols(proto));
   for (const key of allPropertyKeys) {
     if (key === "constructor" || key === "prototype") {
-      return;
+      continue;
     }
     if (typeof key === "string" && ($internalHookNames.indexOf(key) > -1 || key.startsWith("$"))) {
-      return;
+      continue;
     }
     const descriptor = Object.getOwnPropertyDescriptor(proto, key);
     if (allComputedValues !== void 0 && (descriptor == null ? void 0 : descriptor.get) && (descriptor == null ? void 0 : descriptor.set)) {
@@ -879,13 +954,16 @@ function generateSetupFunction(component) {
     var _a, _b;
     setCurrentSetupContext(context);
     const vueComponentInternalInstance = CompositionApi.getCurrentInstance() || {};
+    const allBeforeCreateFunc = collectStaticFunctionFromPrototypeChain(component, "beforeCreate");
+    if (allBeforeCreateFunc) {
+      allBeforeCreateFunc.forEach((beforeCreateFunc) => {
+        if (typeof beforeCreateFunc === "function") {
+          beforeCreateFunc.call(vueComponentInternalInstance);
+        }
+      });
+    }
     const builder = new ComponentBuilderImpl().setComponentClass(component).createAndUseNewInstance();
     const allOptions = builder.getOptionsForComponent();
-    allOptions.forEach((options) => {
-      if (typeof (options == null ? void 0 : options.beforeCreate) === "function") {
-        options.beforeCreate.call(vueComponentInternalInstance);
-      }
-    });
     if (builder.rawInstance !== void 0) {
       builder.rawInstance.$ = vueComponentInternalInstance;
       defineNewLinkedProperties(builder.rawInstance, (vueComponentInternalInstance == null ? void 0 : vueComponentInternalInstance.props) || properties);
@@ -893,7 +971,9 @@ function generateSetupFunction(component) {
       builder.rawInstance._setupContext = context;
     }
     builder.registerLifeCycleHooks();
-    allOptions.forEach((options) => builder.applyDataValues(options.data).createComputedValues(options.computed).injectData(options.inject).provideData(options.provide).registerAdditionalLifeCycleHooks(options).watcherForPropertyChange(options.watch));
+    allOptions.forEach(
+      (options) => builder.makeValuePropertiesReactive().applyDataValues(options.data).createComputedValues(options.computed).injectData(options.inject).provideData(options.provide).registerAdditionalLifeCycleHooks(options).watcherForPropertyChange(options.watch)
+    );
     if (typeof ((_a = builder.rawInstance) == null ? void 0 : _a.setup) === "function") {
       (_b = builder.rawInstance) == null ? void 0 : _b.setup.call(builder.instance, builder, properties, context);
     }
@@ -906,7 +986,7 @@ function generateSetupFunction(component) {
       builder.instance.created();
     }
     clearCurrentSetupContext();
-    return builder.build();
+    return createVueRenderContext(builder.build());
   };
 }
 function Component(options) {

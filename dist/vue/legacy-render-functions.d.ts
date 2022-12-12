@@ -1,9 +1,9 @@
 import type { Component, Slot, VNodeProps, VNode, VNodeArrayChildren } from "vue";
 import type { VueClass, Vue } from "./vue";
-export declare type LegacyVNodeChildren = string | number | boolean | VNode | VNodeArrayChildren;
-export declare type ScopedSlot = Function;
-export declare type Data = Record<string, unknown>;
-export declare type VNodeData = Data & VNodeProps;
+export type LegacyVNodeChildren = string | number | boolean | VNode | VNodeArrayChildren;
+export type ScopedSlot = Function;
+export type Data = Record<string, unknown>;
+export type VNodeData = Data & VNodeProps;
 export interface LegacyVNodeDirective {
     name: string;
     value: unknown;
@@ -32,7 +32,7 @@ export interface LegacyVNodeProps {
         expression: string;
     };
 }
-export declare type LegacyScopedSlotsData = Array<{
+export type LegacyScopedSlotsData = Array<{
     key: string;
     fn: ScopedSlot;
 } | LegacyScopedSlotsData>;

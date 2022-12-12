@@ -1,5 +1,5 @@
 import { CompositionApi } from "../vue";
-export declare type TLifeCycleHookRegisterFunction = (() => undefined) | typeof CompositionApi.onBeforeMount | typeof CompositionApi.onMounted | typeof CompositionApi.onBeforeUnmount | typeof CompositionApi.onBeforeUnmount | typeof CompositionApi.onUnmounted | typeof CompositionApi.onBeforeUpdate | typeof CompositionApi.onUpdated | typeof CompositionApi.onActivated | typeof CompositionApi.onDeactivated | typeof CompositionApi.onRenderTriggered | typeof CompositionApi.onRenderTracked | typeof CompositionApi.onErrorCaptured | typeof CompositionApi.onServerPrefetch;
+export type TLifeCycleHookRegisterFunction = (() => undefined) | typeof CompositionApi.onBeforeMount | typeof CompositionApi.onMounted | typeof CompositionApi.onBeforeUnmount | typeof CompositionApi.onBeforeUnmount | typeof CompositionApi.onUnmounted | typeof CompositionApi.onBeforeUpdate | typeof CompositionApi.onUpdated | typeof CompositionApi.onActivated | typeof CompositionApi.onDeactivated | typeof CompositionApi.onRenderTriggered | typeof CompositionApi.onRenderTracked | typeof CompositionApi.onErrorCaptured | typeof CompositionApi.onServerPrefetch;
 /**
  * Provides mapping between legacy life cycle hooks and new Composition API functions.
  *
