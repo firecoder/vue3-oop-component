@@ -46,4 +46,15 @@ describe("render context proxy:", () => {
             expect(ownProps).to.be.contain(expectedProp);
         }
     });
+
+    it("'ownKeys' returns unique values for SFC components", () => {
+
+        const renderContext = createComponentInstance(WrapperOnMessageForPropTest);
+        expect(renderContext).not.to.be.undefined;
+
+        const ownProps = Object.getOwnPropertyNames(renderContext);
+        const uniqueProps = Array.from(new Set(ownProps));
+        expect(ownProps).to.be.lengthOf(uniqueProps.length);
+        expect(ownProps).to.deep.eq(uniqueProps);
+    });
 });
