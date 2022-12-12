@@ -474,6 +474,7 @@ export function generateSetupFunction<V extends Vue>(component: VueClassComponen
         // set up the instance with options from this decorator.
         // this is after all the other setup has been called as this might want to overwrite props defined by parents.
         allOptions.forEach((options) => builder
+            .makeValuePropertiesReactive()
             .applyDataValues(options.data)
             .createComputedValues(options.computed)
             .injectData(options.inject)

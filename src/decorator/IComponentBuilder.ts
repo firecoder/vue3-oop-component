@@ -102,6 +102,25 @@ export interface IComponentBuilder<T extends Vue> {
     createComputedValues(computedValues?: CompatibleComponentOptions<T>["computed"]):  IComponentBuilder<T>;
 
     /**
+     * Make the "value" properties of the instance reactive.
+     *
+     * <p>
+     *     With original Vue 2 component configurator, all value properties are regarded as part of the "data" set.
+     *     Unfortunately, these value based properties can not be detected upfront on the class of the instance but
+     *     only after the instantiation on the instance. Since all member of the "data"-set are reactive, these
+     *     value based properties in the instance must be made reactive, too.
+     * </p>
+     *
+     * <p>
+     *     Operates on the internally handled instance and throws an exception if no such instance is available and
+     *     can not be created.
+     * </p>
+     *
+     * @throws Error if no instance is available and can not be created.
+     */
+    makeValuePropertiesReactive(): IComponentBuilder<T>;
+
+    /**
      * Inject properties from the Vue dependency injector pool.
      *
      * <p>

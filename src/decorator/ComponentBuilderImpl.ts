@@ -11,7 +11,7 @@ import type {
 import type { IComponentBuilder } from "./IComponentBuilder";
 import type { VueClassComponent } from "./component-decorator-types";
 
-import { isReactive, reactive, toRaw } from "vue";
+import { isReactive, reactive, ref, toRaw } from "vue";
 import { CompositionApi } from "../vue";
 import { $lifeCycleHookRegisterFunctions, isNotInternalHookName } from "./life-cycle-hooks";
 import {
@@ -282,6 +282,56 @@ export class ComponentBuilderImpl<T extends Vue> implements IComponentBuilder<T>
                 } else {
                     instance[propName] = CompositionApi.inject(fromProvidedKey, defaultValue, false);
                 }
+            }
+        }
+
+        return this;
+    }
+
+    /** @inheritdoc */
+    makeValuePropertiesReactive(): IComponentBuilder<T> {
+        this._checkValidInstanceAndThrowError();
+
+        const instance = this.rawInstance;
+
+        // get all the properties based on values
+        const properties = Object.getOwnPropertyNames(instance) || [];
+        for (const propName of properties) {
+            const descriptor = Object.getOwnPropertyDescriptor(instance, propName);
+
+            // ignore properties that are not value based. These are handled by "computed" properties.
+            if (
+                descriptor === undefined
+                || descriptor.get !== undefined
+                || descriptor.set !== undefined
+            ) {
+                continue;
+            }
+
+            // non-configurable properties can not be redefined, which is needed here. So ignore them.
+            if (descriptor.configurable && descriptor.writable) {
+                // create a reactive wrapper inside a function to cut any ties with this builder instance
+
+                const newDescriptor = (function createReactiveWrapper(initialValue: unknown): PropertyDescriptor {
+                    // make the value reactive now
+                    const reactiveReference =  ref(initialValue);
+
+                    // create new property descriptor
+                    return {
+                        // be able to overwrite
+                        configurable: true,
+                        enumerable: true,
+                        get: function getRef() {
+                            return reactiveReference.value;
+                        },
+                        set: function setRef(newValue: unknown) {
+                            // when setting a new value, new objects must be made reactive.
+                            reactiveReference.value = newValue;
+                        },
+                    };
+                })(descriptor.value);
+
+                Object.defineProperty(instance, propName, newDescriptor);
             }
         }
 
