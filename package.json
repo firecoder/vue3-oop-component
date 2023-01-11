@@ -1,5 +1,5 @@
 {
-  "name": "@nexxar/vue3-ts-class-compatibility",
+  "name": "@nexxar/vue3-oop-component",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
