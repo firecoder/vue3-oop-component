@@ -67,6 +67,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nexxar/vue3-ts-class-compatibility"
+    "url": "https://github.com/nexxar/vue3-oop-component"
   }
 }
