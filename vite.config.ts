@@ -42,7 +42,7 @@ export const BaseConfig: UserConfigExport = {
             entry: {
                  [path.parse(
                      pkg.exports["."] && pkg.exports["."].import || path.parse(pkg.main).name
-                 ).name]: "./src/index.ts",
+                 ).name]: "./src/nexxar-vue-oop-component.ts",
                  "vue2-transition": "./src/vue2-transition.ts",
             },
             formats: ["es", "cjs"],

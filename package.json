@@ -2,13 +2,13 @@
   "name": "@nexxar/vue-oop-component",
   "type": "module",
   "main": "lib/nexxar-vue-oop-component.js",
-  "types": "lib/index.d.ts",
+  "types": "lib/nexxar-vue-oop-component.d.ts",
   "version": "0.12.1",
   "license": "MIT",
   "author": "nr@firecoder.com",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
+      "types": "./lib/nexxar-vue-oop-component.d.ts",
       "import": "./lib/nexxar-vue-oop-component.js",
       "require": "./lib/nexxar-vue-oop-component.cjs",
       "default": "./lib/nexxar-vue-oop-component.js"
@@ -27,7 +27,7 @@
   "scripts": {
     "build": "npm run build:lib && npm run build:types",
     "build:lib": "vue-tsc --noEmit && vite build",
-    "build:types": "tsc src/index.ts src/vue2-transition.ts --moduleResolution node  --target esnext --declaration --emitDeclarationOnly --outDir lib",
+    "build:types": "tsc src/nexxar-vue-oop-component.ts src/vue2-transition.ts --moduleResolution node  --target esnext --declaration --emitDeclarationOnly --outDir lib",
     "commitlint": "commitlint --edit",
     "create:changelog": "conventional-changelog -p angular -i CHANGELOG.md -s  --tag-prefix 'release/v'",
     "dev": "vite",
