@@ -12,7 +12,7 @@
       "import": "./lib/nexxar-vue-oop-component.js",
       "default": "./lib/nexxar-vue-oop-component.js"
     },
-    "vue2-transition": {
+    "./vue2-transition": {
       "types": "./lib/vue2-transition.d.ts",
       "import": "./lib/vue2-transition.js",
       "default": "./lib/vue2-transition.js"
