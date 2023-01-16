@@ -6,6 +6,18 @@
   "version": "0.12.1",
   "license": "MIT",
   "author": "nr@firecoder.com",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "vue2-transition": {
+      "types": "./dist/vue2-transition.d.ts",
+      "import": "./dist/vue2-transition.js",
+      "default": "./dist/vue2-transition.js"
+    }
+  },
   "scripts": {
     "build": "npm run build:lib && npm run build:types",
     "build:lib": "vue-tsc --noEmit && vite build",
