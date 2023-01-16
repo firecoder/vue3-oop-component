@@ -1,31 +1,31 @@
 {
   "name": "@nexxar/vue-oop-component",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/nexxar-vue-oop-component.js",
+  "types": "lib/index.d.ts",
   "version": "0.12.1",
   "license": "MIT",
   "author": "nr@firecoder.com",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./lib/index.d.ts",
+      "import": "./lib/nexxar-vue-oop-component.js",
+      "default": "./lib/nexxar-vue-oop-component.js"
     },
     "vue2-transition": {
-      "types": "./dist/vue2-transition.d.ts",
-      "import": "./dist/vue2-transition.js",
-      "default": "./dist/vue2-transition.js"
+      "types": "./lib/vue2-transition.d.ts",
+      "import": "./lib/vue2-transition.js",
+      "default": "./lib/vue2-transition.js"
     }
   },
   "files": [
     "src",
-    "dist"
+    "lib"
   ],
   "scripts": {
     "build": "npm run build:lib && npm run build:types",
     "build:lib": "vue-tsc --noEmit && vite build",
-    "build:types": "tsc src/index.ts --moduleResolution node  --target esnext --declaration --emitDeclarationOnly --outDir dist",
+    "build:types": "tsc src/index.ts --moduleResolution node  --target esnext --declaration --emitDeclarationOnly --outDir lib",
     "commitlint": "commitlint --edit",
     "create:changelog": "conventional-changelog -p angular -i CHANGELOG.md -s  --tag-prefix 'release/v'",
     "dev": "vite",

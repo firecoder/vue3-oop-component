@@ -37,6 +37,7 @@ export const BaseConfig: UserConfigExport = {
             fileName: () => path.basename(pkg.main),
             formats: ["es"],
         },
+        outDir: "lib",
         rollupOptions: {
             external: [...Object.getOwnPropertyNames(pkg.dependencies), "tslib"],
         },
