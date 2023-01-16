@@ -16,6 +16,11 @@ Usage
 As drop-in replacement, it follows the same syntax as `vue-class-component`. Therefore, you may want to consult
 the [`vue-class-component` documentation](https://class-component.vuejs.org/) directly.
 
+```
+npm install --save vue3-oop-component
+```
+
+
 Most of the time, all you need to do is to change the import. Beware, that Vue 3 does not export any base class
 as default export. Thus, either this import needs to be changed completely, or the (not recommended) the Vue 2
 transition export be used instead.
