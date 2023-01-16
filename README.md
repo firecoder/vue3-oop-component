@@ -17,7 +17,8 @@ As drop-in replacement, it follows the same syntax as `vue-class-component`. The
 the [`vue-class-component` documentation](https://class-component.vuejs.org/) directly.
 
 Most of the time, all you need to do is to change the import. Beware, that Vue 3 does not export any base class
-as default export. Thus, this import needs to be changed completely.
+as default export. Thus, either this import needs to be changed completely, or the (not recommended) the Vue 2
+transition export be used instead.
 
 ```diff
 --- a/MyComponent.vue	2023-01-14 15:23:01.000000000 +0100
@@ -34,9 +35,8 @@ as default export. Thus, this import needs to be changed completely.
 An example of the usage can be viewed [in the unit tests](./tree/main/test/vue/test-components/MessageTextAsDecoratedClass.vue). 
 
 
-If you supplement this package with
-[`@nexxar/vue2-types-for-vue3`](https://github.com/nexxar/vue2-types-for-vue3),
-the import can be simplified to just change the target package to import from.
+If you use the Vue 2 transition entry point of this package, then the import can be simplified to just change the
+target package to import from.
 
 ```diff
 --- a/MyComponent.vue	2023-01-14 15:23:01.000000000 +0100
@@ -45,7 +45,7 @@ the import can be simplified to just change the target package to import from.
 -import Vue       from "vue";
 -import Component from "vue-component-decorator";
 -
-+import Vue       from "@nexxar/vue2-types-for-vue3";
++import Vue       from "@nexxar/vue3-oop-component/vue2-transition";
 +import Component from "@nexxar/vue3-oop-component";
 +
 ```
