@@ -4,7 +4,6 @@ import * as path from "path";
 import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vite";
 import vuePlugin from "@firecoder-com/vite-plugin-vue-oop";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 
 
 interface PackageJson {
@@ -31,12 +30,6 @@ const pkg = require("./package.json") as PackageJson;
 export const BaseConfig: UserConfigExport = {
     plugins: [
         vuePlugin(),
-        viteStaticCopy({
-            targets: [{
-                src: "src/vue2-transition.{js,cjs,d.ts}",
-                dest: "",
-            }],
-        }),
     ],
     resolve: {
         alias: {
@@ -46,9 +39,12 @@ export const BaseConfig: UserConfigExport = {
     build: {
         minify: false,
         lib: {
-            entry: path.resolve(__dirname, "src/index.ts"),
-            // package name is in kebab-case, for the name of the browser global, we want camelCase
-            fileName: () => path.basename(pkg.main),
+            entry: {
+                 [path.parse(
+                     pkg.exports["."] && pkg.exports["."].import || path.parse(pkg.main).name
+                 ).name]: "./src/index.ts",
+                 "vue2-transition": "./src/vue2-transition.ts",
+            },
             formats: ["es", "cjs"],
         },
         outDir: pkg.main ? path.basename(path.dirname(pkg.main)) || "lib" : "lib",
