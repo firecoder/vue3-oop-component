@@ -1,5 +1,5 @@
 {
-  "name": "@nexxar/vue3-oop-component",
+  "name": "@nexxar/vue-oop-component",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
