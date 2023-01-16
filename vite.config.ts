@@ -33,7 +33,7 @@ export const BaseConfig: UserConfigExport = {
         vuePlugin(),
         viteStaticCopy({
             targets: [{
-                src: "src/vue2-transition.{js,d.ts}",
+                src: "src/vue2-transition.{js,cjs,d.ts}",
                 dest: "",
             }],
         }),
@@ -48,12 +48,8 @@ export const BaseConfig: UserConfigExport = {
         lib: {
             entry: path.resolve(__dirname, "src/index.ts"),
             // package name is in kebab-case, for the name of the browser global, we want camelCase
-            name: pkg.name
-                .replace(/-./g, ((w) => w[1].toUpperCase()))
-                .replace(/^./, ((w) => w[0].toUpperCase()))
-            ,
             fileName: () => path.basename(pkg.main),
-            formats: ["es"],
+            formats: ["es", "cjs"],
         },
         outDir: pkg.main ? path.basename(path.dirname(pkg.main)) || "lib" : "lib",
         rollupOptions: {

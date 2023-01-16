@@ -10,11 +10,13 @@
     ".": {
       "types": "./lib/index.d.ts",
       "import": "./lib/nexxar-vue-oop-component.js",
+      "require": "./lib/nexxar-vue-oop-component.cjs",
       "default": "./lib/nexxar-vue-oop-component.js"
     },
     "./vue2-transition": {
       "types": "./lib/vue2-transition.d.ts",
       "import": "./lib/vue2-transition.js",
+      "require": "./lib/vue2-transition.cjs",
       "default": "./lib/vue2-transition.js"
     }
   },
