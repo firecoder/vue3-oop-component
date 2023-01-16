@@ -18,6 +18,10 @@
       "default": "./dist/vue2-transition.js"
     }
   },
+  "files": [
+    "src",
+    "dist"
+  ],
   "scripts": {
     "build": "npm run build:lib && npm run build:types",
     "build:lib": "vue-tsc --noEmit && vite build",
