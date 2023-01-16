@@ -6,8 +6,26 @@ import { defineConfig } from "vite";
 import vuePlugin from "@firecoder-com/vite-plugin-vue-oop";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
+
+interface PackageJson {
+    name: string,
+    main?: string,
+    module?: string,
+    browser?: string,
+    dependencies?: Record<string, string>,
+    exports: {
+        [key: string]: {
+            "types": string,
+            "import": string,
+            "require"?: string,
+            "browser"?: string,
+            "default"?: string,
+        },
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require("./package.json") as { name: string, main: string, dependencies: Record<string, string> };
+const pkg = require("./package.json") as PackageJson;
 
 // https://vitejs.dev/config/
 export const BaseConfig: UserConfigExport = {
@@ -37,7 +55,7 @@ export const BaseConfig: UserConfigExport = {
             fileName: () => path.basename(pkg.main),
             formats: ["es"],
         },
-        outDir: "lib",
+        outDir: pkg.main ? path.basename(path.dirname(pkg.main)) || "lib" : "lib",
         rollupOptions: {
             external: [...Object.getOwnPropertyNames(pkg.dependencies), "tslib"],
         },
