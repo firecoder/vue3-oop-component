@@ -1,0 +1,1 @@
+export * from "./nexxar-vue-oop-component";
